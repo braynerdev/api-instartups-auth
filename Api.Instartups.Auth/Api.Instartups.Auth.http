@@ -1,0 +1,6 @@
+@Api.Instartups.Auth_HostAddress = http://localhost:8080
+
+GET {{Api.Instartups.Auth_HostAddress}}/
+Accept: application/json
+
+###

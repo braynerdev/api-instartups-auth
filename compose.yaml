@@ -1,0 +1,7 @@
+﻿services:
+  api.instartups.auth:
+    image: api.instartups.auth
+    build:
+      context: .
+      dockerfile: Api.Instartups.Auth/Dockerfile
+

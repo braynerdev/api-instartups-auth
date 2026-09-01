@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="compose.yaml" />
+  </Folder>
+  <Project Path="Api.Instartups.Auth/Api.Instartups.Auth.csproj" />
+</Solution>
