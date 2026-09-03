@@ -7,6 +7,7 @@ builder.Services.AddDependencyInjection(builder.Configuration);
 
 builder.Services
     .AddIdentityConf()
+    .AddControllersConfig()
     .AddLowerCaseConfig()
     .AddMappingConfig()
     .AddOpenApi()
@@ -23,7 +24,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerExtension(builder.Configuration);
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
+
+app.MapControllers();
 
 app.Run();
