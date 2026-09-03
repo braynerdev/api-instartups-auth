@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDependencyInjection(builder.Configuration);
 
 builder.Services
+    .AddIdentityConf()
     .AddLowerCaseConfig()
     .AddMappingConfig()
     .AddOpenApi()
@@ -23,3 +24,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+
+app.Run();
