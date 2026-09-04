@@ -5,6 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDependencyInjection(builder.Configuration);
 
+builder.AddWolverineConf();
+
 builder.Services
     .AddIdentityConf()
     .AddControllersConfig()

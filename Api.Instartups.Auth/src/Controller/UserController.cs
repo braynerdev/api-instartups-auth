@@ -1,21 +1,22 @@
 ﻿using Api.Instartups.Auth.src.UseCases.User.RegisterUserCommand;
 using Microsoft.AspNetCore.Mvc;
+using Wolverine;
 
 namespace Api.Instartups.Auth.src.Controller;
 
 [Route("api/[controller]")]
 [ApiController]
-public class UserController : ControllerBase
+public class UserController(
+        IMessageBus bus
+    ) : ControllerBase
 {
-    // Vou trocar o fromService pelo Wolverine
-    // 
     [HttpPost]
-    public async Task<IActionResult> RegisterUser(
-        [FromServices] RegisterUserCommandHandler service,
+    public async Task<ActionResult<RegisterUserCommandResponse>> RegisterUser(
+        CancellationToken ct,
         [FromBody] RegisterUserCommand command
     )
     {
-        await service.Handle(command);
-        return Created();
+        var response = await bus.InvokeAsync<RegisterUserCommandResponse>(command, ct);
+        return Ok(response);
     }
 }
