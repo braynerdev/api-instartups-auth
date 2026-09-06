@@ -13,14 +13,19 @@ public static class IdentityConf
             o.Lockout.MaxFailedAccessAttempts = 5;
             o.Lockout.AllowedForNewUsers = true;
             
-            o.Password.RequireDigit = true;
-            o.Password.RequireLowercase = true;
-            o.Password.RequireNonAlphanumeric = true;
-            o.Password.RequireUppercase = true;
+            o.Password.RequireDigit = false;
+            o.Password.RequireLowercase = false;
+            o.Password.RequireNonAlphanumeric = false;
+            o.Password.RequireUppercase = false;
             o.Password.RequiredLength = 1;
-            o.Password.RequiredUniqueChars = 1;
+            o.Password.RequiredUniqueChars = 0;
             
             o.User.RequireUniqueEmail = true;
+        });
+        
+        services.Configure<PasswordHasherOptions>(options =>
+        {
+            options.IterationCount = 1000;
         });
         return services;
     }

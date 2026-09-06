@@ -1,5 +1,8 @@
 using Api.Instartups.Auth.Configurations;
+using Api.Instartups.Auth.Configurations.Database;
 using Api.Instartups.Auth.Configurations.Extension;
+using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +21,8 @@ builder.Services
 builder.AddSerilogConfig();
 
 var app = builder.Build();
+
+app.UseExceptionsMiddleware();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

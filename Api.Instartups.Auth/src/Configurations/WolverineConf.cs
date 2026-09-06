@@ -1,5 +1,7 @@
 using Api.Instartups.Auth.Configurations.Database;
 using Api.Instartups.Auth.src.UseCases.User.RegisterUserCommand;
+using JasperFx;
+using JasperFx.CodeGeneration;
 using Microsoft.AspNetCore.Identity;
 using Wolverine;
 using Wolverine.FluentValidation;
@@ -13,18 +15,23 @@ public static class WolverineConf
         builder.Host.UseWolverine(opt =>
         {
             opt.Durability.Mode = DurabilityMode.MediatorOnly;
-            
-            opt.CodeGeneration.AlwaysUseServiceLocationFor<UserManager<IdentityUser>>();
 
             opt.Discovery.IncludeAssembly(typeof(RegisterUserCommand).Assembly);
-
             opt.UseFluentValidation();
 
-            opt.CodeGeneration
-                .AlwaysUseServiceLocationFor<AppDbContext>();
+            opt.CodeGeneration.AlwaysUseServiceLocationFor<UserManager<IdentityUser>>();
+            opt.CodeGeneration.AlwaysUseServiceLocationFor<AppDbContext>();
 
             opt.Policies.MessageExecutionLogLevel(LogLevel.None);
             opt.Policies.MessageSuccessLogLevel(LogLevel.None);
+
+            opt.Services.CritterStackDefaults(x =>
+            {
+                x.Production.GeneratedCodeMode = TypeLoadMode.Static;
+                x.Production.AssertAllPreGeneratedTypesExist = true;
+
+                x.Development.GeneratedCodeMode = TypeLoadMode.Dynamic;
+            });
         });
 
         return builder;

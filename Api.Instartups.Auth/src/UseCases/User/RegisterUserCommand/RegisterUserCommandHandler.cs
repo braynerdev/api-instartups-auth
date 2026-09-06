@@ -12,10 +12,10 @@ public class RegisterUserCommandHandler
     private readonly UserManager<IdentityUser> _userManager;
     
     public RegisterUserCommandHandler(UserManager<IdentityUser> userManager) => _userManager = userManager;
-    public async Task<RegisterUserCommandResponse> Handle(RegisterUserCommand Command,  CancellationToken ct)
+    public async Task<RegisterUserCommandResponse> Handle(RegisterUserCommand command,  CancellationToken ct)
     {
-        var user = CreateUser(Command);
-        var result = await _userManager.CreateAsync(user, Command.Password);
+        var user = CreateUser(command);
+        var result = await _userManager.CreateAsync(user, command.Password);
         Validate(result);
         return user.Adapt<RegisterUserCommandResponse>();
     }
@@ -24,7 +24,7 @@ public class RegisterUserCommandHandler
     {
         return new IdentityUser
         {
-            UserName = command.Username, 
+            UserName = command.UserName, 
             Email = command.Email, 
             PhoneNumber = command.PhoneNumber
         };
@@ -34,11 +34,22 @@ public class RegisterUserCommandHandler
     {
         if (result.Succeeded)
             return;
-
+        
         throw new IdentityValidationException(
-            result.Errors.Select(e =>
-                new ValidateErrorDTO { Field = GetField(e.Code), Code = e.Code, Message = e.Description }
-            )
+            result.Errors
+                .GroupBy(r => new
+                {
+                    Field = GetField(r.Code),
+                    Code = r.Code
+                })
+                .Select(group =>
+                    new ValidateErrorDTO
+                    (
+                        GetField(group.First().Code), 
+                        group.First().Code, 
+                        group.Select(e => e.Description).ToList()
+                    )
+                )
         );
     }
     
