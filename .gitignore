@@ -107,5 +107,4 @@ logs/
 appsettings.Local.json
 appsettings.Development.json
 
-keys/
 *.pem
