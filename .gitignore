@@ -106,3 +106,6 @@ logs/
 # appsettings local overrides
 appsettings.Local.json
 appsettings.Development.json
+
+keys/
+*.pem
