@@ -11,7 +11,11 @@ public static class DependencyInjection
     public static IServiceCollection AddDependencyInjection(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddPostgresConf(configuration);
-
+        
+        services.AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection(JwtOptions.SectionName))
+            .ValidateOnStart();
+        
         services.AddScoped<IGenerateJwtService, GenerateJwtService>();
         services.AddScoped<IGenerateRefreshTokenService, GenerateRefreshTokenService>();
         
@@ -19,10 +23,6 @@ public static class DependencyInjection
             .AddIdentityCore<IdentityUser>()
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<AppDbContext>();
-        
-        services.AddOptions<JwtOptions>()
-            .Bind(configuration.GetSection(JwtOptions.SectionName))
-            .ValidateOnStart();
 
         return services;
     }

@@ -23,6 +23,7 @@ namespace Api.Instartups.Auth.UseCases.Auth.LoginCommand;
         var userRoles = await userManager.GetRolesAsync(user);
         var token = await jwtService.GenerateJwtAsync(user, userRoles);
         var refreshToken = refreshTokenService.GenerateRefreshToken();
+        return new LoginCommandResponse();
     }
 
     private async Task<IdentityUser> GetUserAsync(string userNameOrEmail)

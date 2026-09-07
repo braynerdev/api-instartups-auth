@@ -1,6 +1,7 @@
 using Api.Instartups.Auth.Interfaces;
 using Api.Instartups.Auth.Options;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -9,15 +10,16 @@ using System.Security.Cryptography;
 namespace Api.Instartups.Auth.Services;
 
 public class GenerateJwtService(
-        JwtOptions jwtOptions
+        IOptions<JwtOptions> options
     ) : IGenerateJwtService
 {
+    private readonly JwtOptions _options = options.Value;
     public async Task<string> GenerateJwtAsync(IdentityUser user, IEnumerable<string> roles)
     {
         var claims = GenerateClaims(user, roles);
-        var signingCredentials = CreateSigningCredentials(jwtOptions.SecretKey);
+        var signingCredentials = CreateSigningCredentials(_options.SecretKey);
 
-        return CreateToken(user, jwtOptions.Issuer, claims, signingCredentials);
+        return CreateToken(user, _options.Issuer, claims, signingCredentials);
     }
     
     private IEnumerable<Claim> GenerateClaims(IdentityUser user, IEnumerable<string> roles)
@@ -61,7 +63,7 @@ public class GenerateJwtService(
             issuer: issuer,
             claims: claims,
             notBefore: dateTimeNow,
-            expires: dateTimeNow.AddMinutes(jwtOptions.ExpirationMinutes),
+            expires: dateTimeNow.AddMinutes(_options.ExpirationMinutes),
             signingCredentials: signingCredentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

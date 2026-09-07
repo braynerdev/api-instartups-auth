@@ -14,7 +14,11 @@ public static class DatabaseConf
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(
-                ConnectionString
+                ConnectionString,
+                bd =>
+                {
+                    bd.MigrationsHistoryTable("__EFMigrationsHistory", "auth");
+                }
             )
         );
         

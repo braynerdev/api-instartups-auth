@@ -1,3 +1,4 @@
+using Api.Instartups.Auth.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
@@ -19,5 +20,8 @@ public class AppDbContext : IdentityDbContext
         modelBuilder.HasDefaultSchema("auth");
         
         base.OnModelCreating(modelBuilder);
+        
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly,
+            t => t.IsAssignableTo(typeof(IAppConfiguration)));
     }
 }
