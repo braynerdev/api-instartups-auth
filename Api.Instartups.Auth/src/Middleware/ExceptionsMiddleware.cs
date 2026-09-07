@@ -46,6 +46,7 @@ public class ExceptionsMiddleware
         return exception switch
         {
             FluentValidation.ValidationException => StatusCodes.Status400BadRequest,
+            BadRequestException => StatusCodes.Status400BadRequest,
             UnauthorizedException => StatusCodes.Status401Unauthorized,
             ForbiddenException => StatusCodes.Status403Forbidden,
             ConflictException => StatusCodes.Status409Conflict,
@@ -77,7 +78,10 @@ public class ExceptionsMiddleware
                 BaseResponseDTO<IEnumerable<ValidateErrorDTO>>.Error(
                         validation.Error
                     ),
-            
+
+            BadRequestException bad =>
+                BaseResponseDTO<string>.Error(null, bad.Message),
+
             OperationCanceledException =>
                 BaseResponseDTO<string>.Error(
                     "Requisição cancelada pelo cliente"),

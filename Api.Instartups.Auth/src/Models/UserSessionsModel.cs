@@ -13,7 +13,7 @@ public class UserSessionsModel
     public string? ReplacedByTokenId { get; private set; }
 
     public string UserId { get; private set; }
-    public IdentityUser User { get; private set; }
+    public ApplicationUser User { get; private set; }
 
 
     private UserSessionsModel(string tokenHash, DateTimeOffset expiresAt, string userId)

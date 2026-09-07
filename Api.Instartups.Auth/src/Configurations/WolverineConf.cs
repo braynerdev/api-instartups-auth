@@ -1,4 +1,5 @@
 using Api.Instartups.Auth.Configurations.Database;
+using Api.Instartups.Auth.Models;
 using Api.Instartups.Auth.src.UseCases.User.RegisterUserCommand;
 using JasperFx;
 using JasperFx.CodeGeneration;
@@ -19,7 +20,7 @@ public static class WolverineConf
             opt.Discovery.IncludeAssembly(typeof(RegisterUserCommand).Assembly);
             opt.UseFluentValidation();
 
-            opt.CodeGeneration.AlwaysUseServiceLocationFor<UserManager<IdentityUser>>();
+            opt.CodeGeneration.AlwaysUseServiceLocationFor<UserManager<ApplicationUser>>();
             opt.CodeGeneration.AlwaysUseServiceLocationFor<AppDbContext>();
 
             opt.Policies.MessageExecutionLogLevel(LogLevel.None);

@@ -1,4 +1,5 @@
 using Api.Instartups.Auth.Interfaces;
+using Api.Instartups.Auth.Models;
 using Api.Instartups.Auth.Options;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -14,15 +15,15 @@ public class GenerateJwtService(
     ) : IGenerateJwtService
 {
     private readonly JwtOptions _options = options.Value;
-    public async Task<string> GenerateJwtAsync(IdentityUser user, IEnumerable<string> roles)
+    public async Task<string> GenerateJwtAsync(ApplicationUser user, IEnumerable<string> roles)
     {
         var claims = GenerateClaims(user, roles);
-        var signingCredentials = CreateSigningCredentials(_options.SecretKey);
+        var signingCredentials = CreateSigningCredentials(_options.PrivateKeyPath);
 
         return CreateToken(user, _options.Issuer, claims, signingCredentials);
     }
     
-    private IEnumerable<Claim> GenerateClaims(IdentityUser user, IEnumerable<string> roles)
+    private IEnumerable<Claim> GenerateClaims(ApplicationUser user, IEnumerable<string> roles)
     {
         var now = DateTimeOffset.UtcNow;
 
@@ -42,10 +43,10 @@ public class GenerateJwtService(
         return claims;
     }
 
-    private SigningCredentials CreateSigningCredentials(string privateKey)
+    private SigningCredentials CreateSigningCredentials(string privateKeyPath)
     {
         var rsa = RSA.Create();
-        rsa.ImportFromPem(privateKey);
+        rsa.ImportFromPem(File.ReadAllText(privateKeyPath));
 
         var key = new RsaSecurityKey(rsa);
 
@@ -55,7 +56,7 @@ public class GenerateJwtService(
 
     }
 
-    private string CreateToken(IdentityUser user, string issuer, IEnumerable<Claim> claims, SigningCredentials signingCredentials)
+    private string CreateToken(ApplicationUser user, string issuer, IEnumerable<Claim> claims, SigningCredentials signingCredentials)
     {
         var dateTimeNow = DateTime.UtcNow;
 

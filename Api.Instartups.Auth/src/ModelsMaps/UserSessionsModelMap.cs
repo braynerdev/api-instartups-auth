@@ -40,7 +40,7 @@ public class UserSessionsModelMap : IEntityTypeConfiguration<UserSessionsModel>,
         builder.HasIndex(x => x.ReplacedByTokenId).IsUnique();
 
         builder.HasOne(us => us.User)
-            .WithMany()
+            .WithMany(u => u.UserSessionsModel)
             .HasForeignKey(us => us.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 

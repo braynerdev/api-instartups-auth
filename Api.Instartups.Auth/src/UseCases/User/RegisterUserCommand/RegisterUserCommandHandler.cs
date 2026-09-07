@@ -1,28 +1,27 @@
 ﻿using Api.Instartups.Auth.DTOs;
 using Api.Instartups.Auth.Exceptions;
+using Api.Instartups.Auth.Models;
 using Api.Instartups.Auth.src.Interfaces.Command;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 
 namespace Api.Instartups.Auth.src.UseCases.User.RegisterUserCommand;
 
-public class RegisterUserCommandHandler
+public class RegisterUserCommandHandler(
+    UserManager<ApplicationUser> userManager)
         : ICommandHandler<RegisterUserCommand,RegisterUserCommandResponse>
 {
-    private readonly UserManager<IdentityUser> _userManager;
-    
-    public RegisterUserCommandHandler(UserManager<IdentityUser> userManager) => _userManager = userManager;
     public async Task<RegisterUserCommandResponse> Handle(RegisterUserCommand command,  CancellationToken ct)
     {
         var user = CreateUser(command);
-        var result = await _userManager.CreateAsync(user, command.Password);
+        var result = await userManager.CreateAsync(user, command.Password);
         Validate(result);
         return user.Adapt<RegisterUserCommandResponse>();
     }
 
-    private IdentityUser CreateUser(RegisterUserCommand command)
+    private ApplicationUser CreateUser(RegisterUserCommand command)
     {
-        return new IdentityUser
+        return new ApplicationUser
         {
             UserName = command.UserName, 
             Email = command.Email, 
