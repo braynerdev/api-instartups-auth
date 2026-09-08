@@ -33,6 +33,7 @@ Content-Type: application/json
 # Refresh -> rotaciona o refresh token e emite um novo par
 POST {{Api.Instartups.Auth_HostAddress}}/api/auth/refresh
 Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.accessToken}}
 
 {
   "refreshToken": "{{login.response.body.data.refreshToken}}"
@@ -43,6 +44,7 @@ Content-Type: application/json
 # Logout -> revoga a sessão do refresh token informado
 POST {{Api.Instartups.Auth_HostAddress}}/api/auth/logout
 Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.accessToken}}
 
 {
   "refreshToken": "{{login.response.body.data.refreshToken}}"
@@ -50,12 +52,8 @@ Content-Type: application/json
 
 ###
 
-# Logout global -> revoga todas as sessões ativas do usuário
+# Logout global -> revoga todas as sessões ativas do usuário (sem body)
 POST {{Api.Instartups.Auth_HostAddress}}/api/auth/logout/all
-Content-Type: application/json
-
-{
-  "refreshToken": "{{login.response.body.data.refreshToken}}"
-}
+Authorization: Bearer {{login.response.body.data.accessToken}}
 
 ###

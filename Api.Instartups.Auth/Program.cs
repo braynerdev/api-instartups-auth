@@ -27,6 +27,8 @@ app.UseExceptionsMiddleware();
 
 app.UseAuthenticationConf();
 
+app.UseAuthorization();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

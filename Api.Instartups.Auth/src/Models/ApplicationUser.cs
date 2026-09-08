@@ -48,12 +48,9 @@ public class ApplicationUser : IdentityUser
         currentSession.Revoke(now);
     }
 
-    public void RevokeAllSessions(UserSessionsModel currentSession)
+    public void RevokeAllSessions()
     {
         var now = DateTimeOffset.UtcNow;
-
-        if (!currentSession.IsActive(now))
-            throw new InvalidRefreshTokenException();
 
         foreach (var session in _userSessionsModel.Where(s => s.IsActive(now)))
             session.Revoke(now);

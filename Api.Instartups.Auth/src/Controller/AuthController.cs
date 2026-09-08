@@ -1,3 +1,4 @@
+using Api.Instartups.Auth.Configurations.Extension;
 using Api.Instartups.Auth.DTOs;
 using Api.Instartups.Auth.UseCases.Auth.LoginCommand;
 using Api.Instartups.Auth.UseCases.Auth.RefreshTokenCommand;
@@ -50,10 +51,10 @@ public class AuthController(
     [HttpPost("logout/all")]
     [Authorize]
     public async Task<ActionResult<BaseResponseDTO<string>>> LogoutAll(
-        CancellationToken ct,
-        [FromBody] RevokeAllTokensCommand command
+        CancellationToken ct
     )
     {
+        var command = new RevokeAllTokensCommand(User.GetUserId());
         await bus.InvokeAsync(command, ct);
         return Ok(BaseResponseDTO<string>.Success(null!, "Sessões encerradas com sucesso."));
     }

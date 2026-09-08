@@ -8,7 +8,7 @@ public class RevokeAllTokensCommandValidation
 {
     public RevokeAllTokensCommandValidation()
     {
-        RuleFor(revoke => revoke.RefreshToken)
+        RuleFor(revoke => revoke.UserId)
             .NotEmpty()
             .WithErrorCode(CodeError.NotEmptyOrNull)
             .WithMessage(MessageError.NotEmptyOrNull());
