@@ -37,4 +37,25 @@ public class ApplicationUser : IdentityUser
         _userSessionsModel.Add(newSession);
         return newSession;
     }
+
+    public void RevokeSession(UserSessionsModel currentSession)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        if (!currentSession.IsActive(now))
+            throw new InvalidRefreshTokenException();
+
+        currentSession.Revoke(now);
+    }
+
+    public void RevokeAllSessions(UserSessionsModel currentSession)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        if (!currentSession.IsActive(now))
+            throw new InvalidRefreshTokenException();
+
+        foreach (var session in _userSessionsModel.Where(s => s.IsActive(now)))
+            session.Revoke(now);
+    }
 }

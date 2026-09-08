@@ -9,3 +9,8 @@ public interface ICommandHandler<TResponse>
 {
     public Task<TResponse> Handle(CancellationToken ct);
 }
+
+public interface IVoidCommandHandler<TCommand> where TCommand : ICommand
+{
+    public Task Handle(TCommand command, CancellationToken ct);
+}

@@ -1,6 +1,8 @@
 using Api.Instartups.Auth.DTOs;
 using Api.Instartups.Auth.UseCases.Auth.LoginCommand;
 using Api.Instartups.Auth.UseCases.Auth.RefreshTokenCommand;
+using Api.Instartups.Auth.UseCases.Auth.RevokeAllTokensCommand;
+using Api.Instartups.Auth.UseCases.Auth.RevokeTokenCommand;
 using Microsoft.AspNetCore.Mvc;
 using Wolverine;
 
@@ -30,5 +32,25 @@ public class AuthController(
     {
         var response = await bus.InvokeAsync<RefreshTokenCommandResponse>(command, ct);
         return Ok(BaseResponseDTO<RefreshTokenCommandResponse>.Success(response));
+    }
+
+    [HttpPost("logout")]
+    public async Task<ActionResult<BaseResponseDTO<string>>> Logout(
+        CancellationToken ct,
+        [FromBody] RevokeTokenCommand command
+    )
+    {
+        await bus.InvokeAsync(command, ct);
+        return Ok(BaseResponseDTO<string>.Success(null!, "Logout realizado com sucesso."));
+    }
+
+    [HttpPost("logout/all")]
+    public async Task<ActionResult<BaseResponseDTO<string>>> LogoutAll(
+        CancellationToken ct,
+        [FromBody] RevokeAllTokensCommand command
+    )
+    {
+        await bus.InvokeAsync(command, ct);
+        return Ok(BaseResponseDTO<string>.Success(null!, "Sessões encerradas com sucesso."));
     }
 }

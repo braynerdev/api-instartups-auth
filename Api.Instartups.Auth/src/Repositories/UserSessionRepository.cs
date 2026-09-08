@@ -30,4 +30,9 @@ public class UserSessionRepository(AppDbContext context) : IUserSessionRepositor
         context.UserSessions.Add(session);
         await context.SaveChangesAsync(ct);
     }
+
+    public Task SaveChangesAsync(CancellationToken ct)
+    {
+        return context.SaveChangesAsync(ct);
+    }
 }

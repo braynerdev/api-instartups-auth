@@ -39,3 +39,23 @@ Content-Type: application/json
 }
 
 ###
+
+# Logout -> revoga a sessão do refresh token informado
+POST {{Api.Instartups.Auth_HostAddress}}/api/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "{{login.response.body.data.refreshToken}}"
+}
+
+###
+
+# Logout global -> revoga todas as sessões ativas do usuário
+POST {{Api.Instartups.Auth_HostAddress}}/api/auth/logout/all
+Content-Type: application/json
+
+{
+  "refreshToken": "{{login.response.body.data.refreshToken}}"
+}
+
+###

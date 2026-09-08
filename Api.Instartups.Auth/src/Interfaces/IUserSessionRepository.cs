@@ -9,4 +9,6 @@ public interface IUserSessionRepository
     Task<UserSessionsModel?> GetByTokenHashAsync(string tokenHash, CancellationToken ct);
 
     Task AddAsync(UserSessionsModel session, CancellationToken ct);
+
+    Task SaveChangesAsync(CancellationToken ct);
 }
