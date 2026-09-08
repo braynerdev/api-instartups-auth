@@ -57,3 +57,9 @@ POST {{Api.Instartups.Auth_HostAddress}}/api/auth/logout/all
 Authorization: Bearer {{login.response.body.data.accessToken}}
 
 ###
+
+# Dados do usuário autenticado -> id, username, email e telefone (null se não tiver)
+GET {{Api.Instartups.Auth_HostAddress}}/api/auth/me
+Authorization: Bearer {{login.response.body.data.accessToken}}
+
+###

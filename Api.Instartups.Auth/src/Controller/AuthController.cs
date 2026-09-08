@@ -1,5 +1,6 @@
 using Api.Instartups.Auth.Configurations.Extension;
 using Api.Instartups.Auth.DTOs;
+using Api.Instartups.Auth.UseCases.Auth.GetMeQuery;
 using Api.Instartups.Auth.UseCases.Auth.LoginCommand;
 using Api.Instartups.Auth.UseCases.Auth.RefreshTokenCommand;
 using Api.Instartups.Auth.UseCases.Auth.RevokeAllTokensCommand;
@@ -46,6 +47,17 @@ public class AuthController(
     {
         await bus.InvokeAsync(command, ct);
         return Ok(BaseResponseDTO<string>.Success(null!, "Logout realizado com sucesso."));
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<BaseResponseDTO<GetMeQueryResponse>>> Me(
+        CancellationToken ct
+    )
+    {
+        var query = new GetMeQuery(User.GetUserId());
+        var response = await bus.InvokeAsync<GetMeQueryResponse>(query, ct);
+        return Ok(BaseResponseDTO<GetMeQueryResponse>.Success(response));
     }
 
     [HttpPost("logout/all")]
