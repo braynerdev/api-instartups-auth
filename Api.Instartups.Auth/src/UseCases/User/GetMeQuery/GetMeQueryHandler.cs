@@ -3,7 +3,7 @@ using Api.Instartups.Auth.Models;
 using Api.Instartups.Auth.src.Interfaces.Query;
 using Microsoft.AspNetCore.Identity;
 
-namespace Api.Instartups.Auth.UseCases.Auth.GetMeQuery;
+namespace Api.Instartups.Auth.UseCases.User.GetMeQuery;
 
 public class GetMeQueryHandler(
         UserManager<ApplicationUser> userManager
@@ -11,8 +11,7 @@ public class GetMeQueryHandler(
 {
     public async Task<GetMeQueryResponse> Handle(GetMeQuery query, CancellationToken ct)
     {
-        var user = await userManager.FindByIdAsync(query.UserId)
-            ?? throw new UnauthorizedException();
+        var user = await userManager.FindByIdAsync(query.UserId);
 
         return new GetMeQueryResponse(
             user.Id,

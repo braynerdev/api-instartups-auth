@@ -1,4 +1,4 @@
-namespace Api.Instartups.Auth.UseCases.Auth.GetMeQuery;
+namespace Api.Instartups.Auth.UseCases.User.GetMeQuery;
 
 public sealed record GetMeQueryResponse(
     string Id,

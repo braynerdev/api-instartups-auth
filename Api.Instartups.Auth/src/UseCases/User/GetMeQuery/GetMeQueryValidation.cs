@@ -1,7 +1,7 @@
 using Api.Instartups.Auth.Constants;
 using FluentValidation;
 
-namespace Api.Instartups.Auth.UseCases.Auth.GetMeQuery;
+namespace Api.Instartups.Auth.UseCases.User.GetMeQuery;
 
 public class GetMeQueryValidation : AbstractValidator<GetMeQuery>
 {
