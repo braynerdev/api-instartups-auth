@@ -11,6 +11,7 @@ builder.Services.AddDependencyInjection(builder.Configuration);
 builder.AddWolverineConf();
 
 builder.Services
+    .AddAuthenticationConf(builder.Configuration)
     .AddIdentityConf()
     .AddControllersConfig()
     .AddLowerCaseConfig()
@@ -24,6 +25,8 @@ var app = builder.Build();
 
 app.UseExceptionsMiddleware();
 
+app.UseAuthenticationConf();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -32,7 +35,6 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
-
 
 app.MapControllers();
 

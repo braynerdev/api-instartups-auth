@@ -3,6 +3,7 @@ using Api.Instartups.Auth.UseCases.Auth.LoginCommand;
 using Api.Instartups.Auth.UseCases.Auth.RefreshTokenCommand;
 using Api.Instartups.Auth.UseCases.Auth.RevokeAllTokensCommand;
 using Api.Instartups.Auth.UseCases.Auth.RevokeTokenCommand;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Wolverine;
 
@@ -25,6 +26,7 @@ public class AuthController(
     }
 
     [HttpPost("refresh")]
+    [Authorize]
     public async Task<ActionResult<BaseResponseDTO<RefreshTokenCommandResponse>>> Refresh(
         CancellationToken ct,
         [FromBody] RefreshTokenCommand command
@@ -35,6 +37,7 @@ public class AuthController(
     }
 
     [HttpPost("logout")]
+    [Authorize]
     public async Task<ActionResult<BaseResponseDTO<string>>> Logout(
         CancellationToken ct,
         [FromBody] RevokeTokenCommand command
@@ -45,6 +48,7 @@ public class AuthController(
     }
 
     [HttpPost("logout/all")]
+    [Authorize]
     public async Task<ActionResult<BaseResponseDTO<string>>> LogoutAll(
         CancellationToken ct,
         [FromBody] RevokeAllTokensCommand command
