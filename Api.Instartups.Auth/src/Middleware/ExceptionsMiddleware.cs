@@ -79,6 +79,9 @@ public class ExceptionsMiddleware
                         validation.Error
                     ),
 
+            UnauthorizedException unauthorized =>
+                BaseResponseDTO<string>.Error(null, unauthorized.Message),
+
             BadRequestException bad =>
                 BaseResponseDTO<string>.Error(null, bad.Message),
 

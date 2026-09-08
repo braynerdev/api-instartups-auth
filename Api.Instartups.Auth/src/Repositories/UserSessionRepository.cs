@@ -18,6 +18,13 @@ public class UserSessionRepository(AppDbContext context) : IUserSessionRepositor
             .LoadAsync(ct);
     }
 
+    public Task<UserSessionsModel?> GetByTokenHashAsync(string tokenHash, CancellationToken ct)
+    {
+        return context.UserSessions
+            .Include(s => s.User)
+            .FirstOrDefaultAsync(s => s.TokenHash == tokenHash, ct);
+    }
+
     public async Task AddAsync(UserSessionsModel session, CancellationToken ct)
     {
         context.UserSessions.Add(session);

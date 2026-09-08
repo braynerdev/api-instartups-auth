@@ -6,5 +6,7 @@ public interface IUserSessionRepository
 {
     Task LoadActiveSessionsAsync(ApplicationUser user, CancellationToken ct);
 
+    Task<UserSessionsModel?> GetByTokenHashAsync(string tokenHash, CancellationToken ct);
+
     Task AddAsync(UserSessionsModel session, CancellationToken ct);
 }

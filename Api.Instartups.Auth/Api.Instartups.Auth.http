@@ -4,3 +4,38 @@ GET {{Api.Instartups.Auth_HostAddress}}/
 Accept: application/json
 
 ###
+
+# Cadastro de usuário
+POST {{Api.Instartups.Auth_HostAddress}}/api/user
+Content-Type: application/json
+
+{
+  "userName": "brayner",
+  "email": "brayner@example.com",
+  "password": "Senha@123",
+  "phoneNumber": null
+}
+
+###
+
+# Login -> retorna accessToken + refreshToken
+# @name login
+POST {{Api.Instartups.Auth_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "userNameOrEmail": "brayner@example.com",
+  "password": "Senha@123"
+}
+
+###
+
+# Refresh -> rotaciona o refresh token e emite um novo par
+POST {{Api.Instartups.Auth_HostAddress}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{login.response.body.data.refreshToken}}"
+}
+
+###

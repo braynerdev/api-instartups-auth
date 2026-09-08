@@ -23,4 +23,18 @@ public class ApplicationUser : IdentityUser
         _userSessionsModel.Add(session);
         return session;
     }
+
+    public UserSessionsModel RotateSession(
+        UserSessionsModel currentSession, string newTokenHash, DateTimeOffset expiresAt)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        if (!currentSession.IsActive(now))
+            throw new InvalidRefreshTokenException();
+
+        var newSession = Models.UserSessionsModel.Create(newTokenHash, expiresAt, Id);
+        currentSession.Revoke(now, newSession.Id);
+        _userSessionsModel.Add(newSession);
+        return newSession;
+    }
 }

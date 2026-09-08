@@ -28,5 +28,13 @@ public class UserSessionsModel
     {
         return new UserSessionsModel(tokenHash, expiresAt, userId);
     }
-    
+
+    public bool IsActive(DateTimeOffset now)
+        => RevokedAt is null && ExpiresAt > now;
+
+    public void Revoke(DateTimeOffset revokedAt, string? replacedByTokenId = null)
+    {
+        RevokedAt = revokedAt;
+        ReplacedByTokenId = replacedByTokenId;
+    }
 }
