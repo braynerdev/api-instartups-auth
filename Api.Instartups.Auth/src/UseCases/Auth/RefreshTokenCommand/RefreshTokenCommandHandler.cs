@@ -24,9 +24,8 @@ public class RefreshTokenCommandHandler(
         var user = session.User;
 
         var newRefreshToken = refreshTokenService.GenerateRefreshToken();
-        var expiresAt = DateTimeOffset.UtcNow.AddDays(_refreshTokenOptions.ExpirationDays);
 
-        var newSession = user.RotateSession(session, refreshTokenService.Hash(newRefreshToken), expiresAt);
+        var newSession = user.RotateSession(session, refreshTokenService.Hash(newRefreshToken), session.ExpiresAt);
 
         var roles = await userManager.GetRolesAsync(user);
         var accessToken = await jwtService.GenerateJwtAsync(user, roles);
