@@ -13,6 +13,7 @@ builder.AddWolverineConf();
 builder.Services
     .AddAuthenticationConf(builder.Configuration)
     .AddIdentityConf()
+    .AddAuthorizationConfig()
     .AddControllersConfig()
     .AddLowerCaseConfig()
     .AddMappingConfig()
