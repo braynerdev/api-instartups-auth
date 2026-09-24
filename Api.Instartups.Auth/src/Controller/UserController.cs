@@ -23,13 +23,13 @@ public class UserController(
     ) : ControllerBase
 {
     [HttpPost]
-    public async Task<ActionResult<RegisterUserCommandResponse>> RegisterUser(
+    public async Task<ActionResult<BaseResponseDTO<RegisterUserCommandResponse>>> RegisterUser(
         CancellationToken ct,
         [FromBody] RegisterUserCommand command
     )
     {
         var response = await bus.InvokeAsync<RegisterUserCommandResponse>(command, ct);
-        return Ok(response);
+        return Ok(BaseResponseDTO<RegisterUserCommandResponse>.Success(response));
     }
 
     [HttpGet]

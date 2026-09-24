@@ -1,3 +1,4 @@
+using Api.Instartups.Auth.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Instartups.Auth.Controller;
@@ -7,8 +8,8 @@ namespace Api.Instartups.Auth.Controller;
 public class HealthCheckController : ControllerBase
 {
     [HttpGet]
-    public IActionResult Health()
+    public ActionResult<BaseResponseDTO<string>> Health()
     {
-        return Ok("ok");
+        return Ok(BaseResponseDTO<string>.Success("ok"));
     }
 }
