@@ -1,9 +1,11 @@
 ﻿using Api.Instartups.Auth.Configurations.Extension;
+using Api.Instartups.Auth.Constants;
 using Api.Instartups.Auth.DTOs;
 using Api.Instartups.Auth.src.UseCases.User.ChangePasswordCommand;
 using Api.Instartups.Auth.src.UseCases.User.RegisterUserCommand;
 using Api.Instartups.Auth.src.UseCases.User.UpdateMeCommand;
 using Api.Instartups.Auth.UseCases.User.GetMeQuery;
+using Api.Instartups.Auth.UseCases.User.ListUsersQuery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Wolverine;
@@ -24,6 +26,19 @@ public class UserController(
     {
         var response = await bus.InvokeAsync<RegisterUserCommandResponse>(command, ct);
         return Ok(response);
+    }
+
+    [HttpGet]
+    [Authorize(Policy = PermissionConst.Admin)]
+    public async Task<ActionResult<BaseResponseDTO<ListUsersQueryResponse>>> ListUsers(
+        [FromQuery] string? cursor,
+        [FromQuery] int pageSize,
+        CancellationToken ct
+    )
+    {
+        var query = new ListUsersQuery(cursor, pageSize <= 0 ? 20 : pageSize);
+        var response = await bus.InvokeAsync<ListUsersQueryResponse>(query, ct);
+        return Ok(BaseResponseDTO<ListUsersQueryResponse>.Success(response));
     }
 
     [HttpGet("me")]

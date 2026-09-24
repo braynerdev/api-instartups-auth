@@ -24,6 +24,8 @@ builder.AddSerilogConfig();
 
 var app = builder.Build();
 
+await app.Services.SeedIdentityDataAsync(builder.Configuration);
+
 app.UseExceptionsMiddleware();
 
 app.UseAuthenticationConf();

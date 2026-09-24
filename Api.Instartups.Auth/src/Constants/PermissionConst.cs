@@ -4,16 +4,19 @@ public static class PermissionConst
 {
     public sealed record Permission(string Name);
 
-    public static readonly Permission UsersView = new("Users.View");
-    public static readonly Permission UsersCreate = new("Users.Create");
-    public static readonly Permission UsersUpdate = new("Users.Update");
-    public static readonly Permission UsersDelete = new("Users.Delete");
+    public const string UsersView = "Users.View";
+    public const string UsersCreate = "Users.Create";
+    public const string UsersUpdate = "Users.Update";
+    public const string UsersDelete = "Users.Delete";
 
-    public static readonly Permission SessionsRevoke = new("Sessions.Revoke");
+    public const string SessionsRevoke = "Sessions.Revoke";
+
+    public const string Admin = "Admin";
 
     public static readonly IReadOnlyList<Permission> All =
     [
-        UsersView, UsersCreate, UsersUpdate, UsersDelete,
-        SessionsRevoke
+        new Permission(UsersView), new Permission(UsersCreate), new Permission(UsersUpdate), new Permission(UsersDelete),
+        new Permission(SessionsRevoke),
+        new Permission(Admin)
     ];
 }
