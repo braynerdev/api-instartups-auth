@@ -4,3 +4,62 @@ GET {{Api.Instartups.Auth_HostAddress}}/
 Accept: application/json
 
 ###
+
+# Cadastro de usuário
+POST {{Api.Instartups.Auth_HostAddress}}/api/user
+Content-Type: application/json
+
+{
+  "userName": "brayner",
+  "email": "brayner@example.com",
+  "password": "Senha@123",
+  "phoneNumber": null
+}
+
+###
+
+# Login -> retorna accessToken + refreshToken
+# @name login
+POST {{Api.Instartups.Auth_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "userNameOrEmail": "brayner@example.com",
+  "password": "Senha@123"
+}
+
+###
+
+# Refresh -> rotaciona o refresh token e emite um novo par
+POST {{Api.Instartups.Auth_HostAddress}}/api/auth/refresh
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.accessToken}}
+
+{
+  "refreshToken": "{{login.response.body.data.refreshToken}}"
+}
+
+###
+
+# Logout -> revoga a sessão do refresh token informado
+POST {{Api.Instartups.Auth_HostAddress}}/api/auth/logout
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.accessToken}}
+
+{
+  "refreshToken": "{{login.response.body.data.refreshToken}}"
+}
+
+###
+
+# Logout global -> revoga todas as sessões ativas do usuário (sem body)
+POST {{Api.Instartups.Auth_HostAddress}}/api/auth/logout/all
+Authorization: Bearer {{login.response.body.data.accessToken}}
+
+###
+
+# Dados do usuário autenticado -> id, username, email e telefone (null se não tiver)
+GET {{Api.Instartups.Auth_HostAddress}}/api/auth/me
+Authorization: Bearer {{login.response.body.data.accessToken}}
+
+###
