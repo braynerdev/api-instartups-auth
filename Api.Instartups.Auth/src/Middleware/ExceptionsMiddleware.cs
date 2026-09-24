@@ -49,6 +49,7 @@ public class ExceptionsMiddleware
             BadRequestException => StatusCodes.Status400BadRequest,
             UnauthorizedException => StatusCodes.Status401Unauthorized,
             ForbiddenException => StatusCodes.Status403Forbidden,
+            NotFoundException => StatusCodes.Status404NotFound,
             ConflictException => StatusCodes.Status409Conflict,
             OperationCanceledException => StatusCodes.Status499ClientClosedRequest,
 
@@ -84,6 +85,9 @@ public class ExceptionsMiddleware
 
             BadRequestException bad =>
                 BaseResponseDTO<string>.Error(null, bad.Message),
+
+            NotFoundException notFound =>
+                BaseResponseDTO<string>.Error(null, notFound.Message),
 
             OperationCanceledException =>
                 BaseResponseDTO<string>.Error(
