@@ -13,6 +13,7 @@ builder.AddWolverineConf();
 builder.Services
     .AddAuthenticationConf(builder.Configuration)
     .AddIdentityConf()
+    .AddAuthorizationConfig()
     .AddControllersConfig()
     .AddLowerCaseConfig()
     .AddMappingConfig()
@@ -22,6 +23,8 @@ builder.Services
 builder.AddSerilogConfig();
 
 var app = builder.Build();
+
+await app.Services.SeedIdentityDataAsync(builder.Configuration);
 
 app.UseExceptionsMiddleware();
 

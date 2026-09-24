@@ -21,6 +21,10 @@ public class LoginCommandHandler(
     public async Task<LoginCommandResponse> Handle(LoginCommand command, CancellationToken ct)
     {
         var user = await GetUserAsync(command.UserNameOrEmail);
+
+        if (await userManager.IsLockedOutAsync(user))
+            throw new ForbiddenException("Usuário bloqueado. Entre em contato com o administrador.");
+
         await CheckPasswordAsync(user, command.Password);
 
         await sessionRepository.LoadActiveSessionsAsync(user, ct);

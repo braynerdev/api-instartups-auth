@@ -23,10 +23,12 @@ public class RefreshTokenCommandHandler(
         var session = await GetSessionAsync(command.RefreshToken, ct);
         var user = session.User;
 
-        var newRefreshToken = refreshTokenService.GenerateRefreshToken();
-        var expiresAt = DateTimeOffset.UtcNow.AddDays(_refreshTokenOptions.ExpirationDays);
+        if (await userManager.IsLockedOutAsync(user))
+            throw new ForbiddenException("Usuário bloqueado. Entre em contato com o administrador.");
 
-        var newSession = user.RotateSession(session, refreshTokenService.Hash(newRefreshToken), expiresAt);
+        var newRefreshToken = refreshTokenService.GenerateRefreshToken();
+
+        var newSession = user.RotateSession(session, refreshTokenService.Hash(newRefreshToken), session.ExpiresAt);
 
         var roles = await userManager.GetRolesAsync(user);
         var accessToken = await jwtService.GenerateJwtAsync(user, roles);

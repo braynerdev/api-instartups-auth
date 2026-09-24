@@ -1,5 +1,4 @@
-﻿using Api.Instartups.Auth.DTOs;
-using Api.Instartups.Auth.Exceptions;
+﻿using Api.Instartups.Auth.Common.Identity;
 using Api.Instartups.Auth.Models;
 using Api.Instartups.Auth.src.Interfaces.Command;
 using Mapster;
@@ -15,7 +14,7 @@ public class RegisterUserCommandHandler(
     {
         var user = CreateUser(command);
         var result = await userManager.CreateAsync(user, command.Password);
-        Validate(result);
+        result.EnsureSucceeded();
         return user.Adapt<RegisterUserCommandResponse>();
     }
 
@@ -23,50 +22,9 @@ public class RegisterUserCommandHandler(
     {
         return new ApplicationUser
         {
-            UserName = command.UserName, 
-            Email = command.Email, 
+            UserName = command.UserName,
+            Email = command.Email,
             PhoneNumber = command.PhoneNumber
-        };
-    }
-
-    private void Validate(IdentityResult result)
-    {
-        if (result.Succeeded)
-            return;
-        
-        throw new IdentityValidationException(
-            result.Errors
-                .GroupBy(r => new
-                {
-                    Field = GetField(r.Code),
-                    Code = r.Code
-                })
-                .Select(group =>
-                    new ValidateErrorDTO
-                    (
-                        GetField(group.First().Code), 
-                        group.First().Code, 
-                        group.Select(e => e.Description).ToList()
-                    )
-                )
-        );
-    }
-    
-    private static string GetField(string code)
-    {
-        return code switch
-        {
-            "DuplicateUserName" or "InvalidUserName" => "username",
-            "DuplicateEmail" or "InvalidEmail" => "email",
-
-            "PasswordTooShort" or
-                "PasswordRequiresDigit" or
-                "PasswordRequiresUpper" or
-                "PasswordRequiresLower" or
-                "PasswordRequiresNonAlphanumeric" or
-                "PasswordRequiresUniqueChars" => "password",
-
-            _ => string.Empty
         };
     }
 }
