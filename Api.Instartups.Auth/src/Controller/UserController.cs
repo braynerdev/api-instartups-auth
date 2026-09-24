@@ -1,8 +1,10 @@
 ﻿using Api.Instartups.Auth.Configurations.Extension;
 using Api.Instartups.Auth.Constants;
 using Api.Instartups.Auth.DTOs;
+using Api.Instartups.Auth.src.UseCases.User.AddUserPermissionCommand;
 using Api.Instartups.Auth.src.UseCases.User.ChangePasswordCommand;
 using Api.Instartups.Auth.src.UseCases.User.RegisterUserCommand;
+using Api.Instartups.Auth.src.UseCases.User.RemoveUserPermissionCommand;
 using Api.Instartups.Auth.src.UseCases.User.UpdateMeCommand;
 using Api.Instartups.Auth.UseCases.User.GetMeQuery;
 using Api.Instartups.Auth.UseCases.User.GetUserByIdQuery;
@@ -87,5 +89,31 @@ public class UserController(
         var command = new ChangePasswordCommand(User.GetUserId(), request.CurrentPassword, request.NewPassword);
         await bus.InvokeAsync(command, ct);
         return Ok(BaseResponseDTO<string>.Success(null!, "Senha alterada com sucesso."));
+    }
+
+    [HttpPost("{id}/permissions/{permissionName}")]
+    [Authorize(Policy = PermissionConst.Admin)]
+    public async Task<ActionResult<BaseResponseDTO<string>>> AddUserPermission(
+        [FromRoute] string id,
+        [FromRoute] string permissionName,
+        CancellationToken ct
+    )
+    {
+        var command = new AddUserPermissionCommand(id, permissionName);
+        await bus.InvokeAsync(command, ct);
+        return Ok(BaseResponseDTO<string>.Success(null!, "Permissão adicionada com sucesso."));
+    }
+
+    [HttpDelete("{id}/permissions/{permissionName}")]
+    [Authorize(Policy = PermissionConst.Admin)]
+    public async Task<ActionResult<BaseResponseDTO<string>>> RemoveUserPermission(
+        [FromRoute] string id,
+        [FromRoute] string permissionName,
+        CancellationToken ct
+    )
+    {
+        var command = new RemoveUserPermissionCommand(id, permissionName);
+        await bus.InvokeAsync(command, ct);
+        return Ok(BaseResponseDTO<string>.Success(null!, "Permissão removida com sucesso."));
     }
 }
