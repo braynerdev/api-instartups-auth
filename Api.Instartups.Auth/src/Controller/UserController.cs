@@ -2,6 +2,7 @@
 using Api.Instartups.Auth.Constants;
 using Api.Instartups.Auth.DTOs;
 using Api.Instartups.Auth.src.UseCases.User.AddUserPermissionCommand;
+using Api.Instartups.Auth.src.UseCases.User.AdminUpdateUserCommand;
 using Api.Instartups.Auth.src.UseCases.User.ChangePasswordCommand;
 using Api.Instartups.Auth.src.UseCases.User.RegisterUserCommand;
 using Api.Instartups.Auth.src.UseCases.User.RemoveUserPermissionCommand;
@@ -65,6 +66,21 @@ public class UserController(
         var query = new GetMeQuery(User.GetUserId());
         var response = await bus.InvokeAsync<GetMeQueryResponse>(query, ct);
         return Ok(BaseResponseDTO<GetMeQueryResponse>.Success(response));
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Policy = PermissionConst.Admin)]
+    public async Task<ActionResult<BaseResponseDTO<AdminUpdateUserCommandResponse>>> AdminUpdateUser(
+        [FromRoute] string id,
+        [FromBody] AdminUpdateUserRequest request,
+        CancellationToken ct
+    )
+    {
+        var command = new AdminUpdateUserCommand(
+            User.GetUserId(), id, request.UserName, request.Email,
+            request.PhoneNumber, request.NewPassword, request.IsLocked);
+        var response = await bus.InvokeAsync<AdminUpdateUserCommandResponse>(command, ct);
+        return Ok(BaseResponseDTO<AdminUpdateUserCommandResponse>.Success(response));
     }
 
     [HttpPut("me")]

@@ -5,5 +5,6 @@ public sealed record GetUserByIdQueryResponse(
     string UserName,
     string Email,
     string? PhoneNumber,
-    IReadOnlyList<string> Roles
+    IReadOnlyList<string> Roles,
+    bool IsLocked
 );

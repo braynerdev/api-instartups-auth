@@ -17,13 +17,15 @@ public class GetUserByIdQueryHandler(
             throw new NotFoundException("Usuário não encontrado.");
 
         var roles = await userManager.GetRolesAsync(user);
+        var isLocked = await userManager.IsLockedOutAsync(user);
 
         return new GetUserByIdQueryResponse(
             user.Id,
             user.UserName!,
             user.Email!,
             user.PhoneNumber,
-            roles.ToList()
+            roles.ToList(),
+            isLocked
         );
     }
 }

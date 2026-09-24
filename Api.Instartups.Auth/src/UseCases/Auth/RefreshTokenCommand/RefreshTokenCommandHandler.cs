@@ -23,6 +23,9 @@ public class RefreshTokenCommandHandler(
         var session = await GetSessionAsync(command.RefreshToken, ct);
         var user = session.User;
 
+        if (await userManager.IsLockedOutAsync(user))
+            throw new ForbiddenException("Usuário bloqueado. Entre em contato com o administrador.");
+
         var newRefreshToken = refreshTokenService.GenerateRefreshToken();
 
         var newSession = user.RotateSession(session, refreshTokenService.Hash(newRefreshToken), session.ExpiresAt);
