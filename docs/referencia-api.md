@@ -188,12 +188,22 @@ Convenções gerais válidas para todos os endpoints abaixo:
 
 ### `GET /api/permission`
 - **Autenticação:** `Policy = Admin`.
+- **Query params:**
+  - `cursor` (opcional) — valor de `nextCursor` da página anterior.
+  - `pageSize` (opcional, 1–100, padrão `20` quando ausente ou `<= 0`).
+  - `search` (opcional, até 100 caracteres) — filtra pelo nome da permissão (`contains`, sem diferenciar maiúsculas/minúsculas).
 - **Resposta 200 (`BaseResponseDTO<ListPermissionsQueryResponse>`):**
 
 ```json
-{ "permissions": ["Users.View", "Users.Create", "Users.Update", "Users.Delete", "Sessions.Revoke", "Admin"] }
+{
+  "items": [{ "name": "Admin" }, { "name": "Sessions.Revoke" }],
+  "nextCursor": "<cursor opaco>",
+  "hasMore": true
+}
 ```
-- **Observação:** a lista é **estática**, retornada diretamente de `PermissionConst.All` — não reflete nenhuma consulta ao banco, apenas o catálogo fixo definido em código.
+- **Ordenação:** por `name` (ordinal). O cursor guarda o último nome retornado; mantenha o mesmo `search` ao seguir o cursor.
+- **Erros possíveis:** `400` cursor inválido, `pageSize` fora do intervalo ou `search` longo demais.
+- **Observação:** o catálogo é **estático**, vindo de `PermissionConst.All` — a paginação e o filtro são feitos em memória, sem consulta ao banco.
 
 ## Exemplos de uso (arquivo `.http`)
 
