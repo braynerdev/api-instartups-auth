@@ -50,7 +50,7 @@ Convenções gerais válidas para todos os endpoints abaixo:
 - **Erros possíveis:** `400` credenciais inválidas ou limite de sessões ativas atingido; `403` usuário bloqueado.
 
 ### `POST /api/auth/refresh`
-- **Autenticação:** `[Authorize]` (access token válido, mesmo estando perto de expirar).
+- **Autenticação:** nenhuma — o refresh token no corpo é a credencial; funciona mesmo com o access token expirado.
 - **Corpo (`RefreshTokenCommand`):** `{ "refreshToken": "string" }` (obrigatório).
 - **Resposta 200:** `BaseResponseDTO<RefreshTokenCommandResponse>` com `{ accessToken, refreshToken }` — **novo** par, a sessão anterior é revogada e substituída.
 - **Erros possíveis:** `401` refresh token inválido/inexistente; `403` usuário bloqueado.
