@@ -20,7 +20,7 @@ public class GenerateJwtService(
         var claims = GenerateClaims(user, roles);
         var signingCredentials = CreateSigningCredentials(_options.PrivateKeyPath);
 
-        return CreateToken(user, _options.Issuer, claims, signingCredentials);
+        return CreateToken(user, claims, signingCredentials);
     }
     
     private IEnumerable<Claim> GenerateClaims(ApplicationUser user, IEnumerable<string> roles)
@@ -56,12 +56,13 @@ public class GenerateJwtService(
 
     }
 
-    private string CreateToken(ApplicationUser user, string issuer, IEnumerable<Claim> claims, SigningCredentials signingCredentials)
+    private string CreateToken(ApplicationUser user, IEnumerable<Claim> claims, SigningCredentials signingCredentials)
     {
         var dateTimeNow = DateTime.UtcNow;
 
         var token = new JwtSecurityToken(
-            issuer: issuer,
+            issuer: _options.Issuer,
+            audience: _options.Audience,
             claims: claims,
             notBefore: dateTimeNow,
             expires: dateTimeNow.AddMinutes(_options.ExpirationMinutes),
