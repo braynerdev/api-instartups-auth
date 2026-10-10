@@ -37,7 +37,7 @@ public class GenerateJwtService(
         };
         
         claims.AddRange(
-            roles.Select(role => new Claim(ClaimTypes.Role, role))
+            roles.Select(role => new Claim("roles", role))
         );
 
         return claims;
