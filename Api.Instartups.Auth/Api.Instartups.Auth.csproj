@@ -28,14 +28,4 @@
         <PackageReference Include="WolverineFx.RuntimeCompilation" Version="6.33.0" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Content Include="..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Keys\" />
-    </ItemGroup>
-
 </Project>

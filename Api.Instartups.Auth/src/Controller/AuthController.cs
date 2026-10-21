@@ -27,7 +27,6 @@ public class AuthController(
     }
 
     [HttpPost("refresh")]
-    [Authorize]
     public async Task<ActionResult<BaseResponseDTO<RefreshTokenCommandResponse>>> Refresh(
         CancellationToken ct,
         [FromBody] RefreshTokenCommand command
