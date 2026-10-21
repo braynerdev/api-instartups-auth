@@ -16,10 +16,14 @@ public class PermissionController(
     [HttpGet]
     [Authorize(Policy = PermissionConst.Admin)]
     public async Task<ActionResult<BaseResponseDTO<ListPermissionsQueryResponse>>> ListPermissions(
+        [FromQuery] string? cursor,
+        [FromQuery] int pageSize,
+        [FromQuery] string? search,
         CancellationToken ct
     )
     {
-        var response = await bus.InvokeAsync<ListPermissionsQueryResponse>(new ListPermissionsQuery(), ct);
+        var query = new ListPermissionsQuery(cursor, pageSize <= 0 ? 20 : pageSize, search);
+        var response = await bus.InvokeAsync<ListPermissionsQueryResponse>(query, ct);
         return Ok(BaseResponseDTO<ListPermissionsQueryResponse>.Success(response));
     }
 }

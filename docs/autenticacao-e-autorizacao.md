@@ -58,7 +58,7 @@ O refresh token em si (`GenerateRefreshTokenService.GenerateRefreshToken()`) é 
 
 `ApplicationUser.MaxActiveSessions = 3`. Ao fazer login, `AddSession` conta as sessões ativas (`RevokedAt is null && ExpiresAt > now`) e lança `MaxActiveSessionsException` (400, "Limite de sessões ativas atingido.") se o limite já tiver sido atingido — ou seja, um quarto login simultâneo é rejeitado enquanto uma das três sessões anteriores não for revogada.
 
-### Renovação (`POST /api/auth/refresh`, requer `[Authorize]`)
+### Renovação (`POST /api/auth/refresh`, anônimo)
 
 `RefreshTokenCommandHandler`:
 1. Busca a sessão pelo hash do refresh token enviado. Se não existir, lança `InvalidRefreshTokenException` (401, "Refresh token inválido.").
@@ -66,7 +66,7 @@ O refresh token em si (`GenerateRefreshTokenService.GenerateRefreshToken()`) é 
 3. Rotaciona a sessão (`ApplicationUser.RotateSession`): a sessão antiga é revogada e marcada com `ReplacedByTokenId` apontando para a nova; a nova sessão é criada com o **mesmo `ExpiresAt`** da sessão original (a renovação não estende a janela total da sessão, apenas troca o token).
 4. Emite um novo access token e retorna `{ AccessToken, RefreshToken }` (novo par).
 
-> Este endpoint exige um access token válido (`[Authorize]`) **além** do refresh token no corpo — ou seja, para renovar a sessão o cliente precisa apresentar ambos.
+> Este endpoint não exige access token: a credencial é o próprio refresh token enviado no corpo. Assim o cliente consegue renovar a sessão mesmo depois que o access token expirou (dentro da janela de validade do refresh token).
 
 ### Logout (`POST /api/auth/logout`, requer `[Authorize]`)
 
