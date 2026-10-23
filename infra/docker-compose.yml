@@ -1,5 +1,3 @@
-name: instartups
-
 services:
   api-auth:
     build:
