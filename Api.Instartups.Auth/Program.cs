@@ -1,6 +1,7 @@
 using Api.Instartups.Auth.Configurations;
 using Api.Instartups.Auth.Configurations.Database;
 using Api.Instartups.Auth.Configurations.Extension;
+using JasperFx;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
@@ -24,6 +25,10 @@ builder.AddSerilogConfig();
 
 var app = builder.Build();
 
+var executandoComando = args.Length > 0 && !args[0].StartsWith('-');
+if (!executandoComando)
+    await app.ApplyMigrationsAsync();
+
 await app.Services.SeedIdentityDataAsync(builder.Configuration);
 
 app.UseExceptionsMiddleware();
@@ -32,7 +37,6 @@ app.UseAuthenticationConf();
 
 app.UseAuthorization();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -43,4 +47,4 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 
-app.Run();
+return await app.RunJasperFxCommands(args);

@@ -6,7 +6,7 @@
 - PostgreSQL acessível (localmente ou via container).
 - Um par de chaves RSA para assinatura do JWT (já existe um em `Api.Instartups.Auth/Keys/`, ver seção [Chaves JWT](#chaves-jwt-rsa)).
 
-Não existe arquivo `.env`/`.env.example` no projeto. Toda a configuração é feita através de `appsettings.json` / `appsettings.Development.json` (providers padrão de configuração do ASP.NET Core), podendo ser sobrescrita por variáveis de ambiente ou `dotnet user-secrets` seguindo a convenção `Secao__Chave`.
+Localmente, toda a configuração é feita através de `appsettings.json` / `appsettings.Development.json` (providers padrão de configuração do ASP.NET Core), podendo ser sobrescrita por variáveis de ambiente ou `dotnet user-secrets` seguindo a convenção `Secao__Chave`. No Docker, as variáveis vêm de `infra/.env` (modelo em `infra/.env.example`, ver [`deploy.md`](./deploy.md)).
 
 ## Chaves de configuração
 
@@ -14,11 +14,10 @@ Todas as chaves lidas pela aplicação, com origem em `appsettings.json` (produ�
 
 | Chave | `appsettings.json` (base) | `appsettings.Development.json` | Uso |
 |---|---|---|---|
-| `ConnectionStrings:PostgresConnection` | `Host=localhost;Port=5432;Database=instartups_db;Username=postgres;Password=1208` | mesma, porém `Port=5433` | String de conexão do PostgreSQL |
+| `ConnectionStrings:PostgresConnection` | placeholder `Host=EXEMPLO;...;Password=EXEMPLO` | string de conexão local | String de conexão do PostgreSQL |
 | `AppDoc:NomeApi` | `API de Autenticação InStartups` | igual | Título usado no Swagger |
 | `AppDoc:DescricaoApi` | `API responsável pelo gerenciamento de autenticação e acesso aos serviços do sistema InStartups.` | igual | Descrição usada no Swagger |
-| `Jwt:Issuer` | `minha-api` | igual | Emissor (`iss`) validado no token |
-| `Jwt:Audience` | `meu-app` | igual | Configurado mas **não validado nem incluído no token** (ver [`limitacoes-conhecidas.md`](./limitacoes-conhecidas.md)) |
+| `Jwt:Issuer` | vazio (`""`) | `minha-api` | Emissor (`iss`) validado no token |
 | `Jwt:PrivateKeyPath` | `Keys/jwt-private.pem` | igual | Caminho da chave privada RSA usada para assinar o access token |
 | `Jwt:PublicKeyPath` | `Keys/jwt-public.pem` | igual | Caminho da chave pública RSA usada para validar o token recebido |
 | `Jwt:ExpirationMinutes` | `60` | igual | Tempo de vida do access token, em minutos |
@@ -30,7 +29,7 @@ Todas as chaves lidas pela aplicação, com origem em `appsettings.json` (produ�
 | `Serilog:MinimumLevel:Override:Api.Instartups.Auth.Middleware` | `Warning` | igual | Nível de log específico para o middleware de exceções |
 | `AllowedHosts` | `*` | — | Padrão do ASP.NET Core |
 
-> **Atenção:** os valores acima — incluindo a senha do banco (`1208`), a senha do admin de desenvolvimento (`Admin@123`) e a chave AES de cursor de desenvolvimento — estão versionados nos arquivos `appsettings*.json` deste repositório. Eles servem apenas para ambiente local/desenvolvimento; qualquer implantação real precisa sobrescrever essas chaves com segredos próprios (variáveis de ambiente, Key Vault, `dotnet user-secrets` etc.). Ver [`limitacoes-conhecidas.md`](./limitacoes-conhecidas.md).
+> **Atenção:** o `appsettings.json` versionado não traz credenciais (connection string com placeholders, JWT, cursor e admin vazios). Os valores reais ficam no `appsettings.Development.json`, que é ignorado pelo git e serve só para desenvolvimento local; qualquer implantação real precisa fornecer segredos próprios (variáveis de ambiente, Key Vault, `dotnet user-secrets` etc.).
 
 ## Chaves JWT (RSA)
 
@@ -61,9 +60,10 @@ Em `appsettings.Development.json` essas credenciais já vêm preenchidas (`admin
 ```bash
 cd Api.Instartups.Auth
 dotnet restore
-dotnet ef database update   # aplica a migration existente (requer PostgreSQL acessível)
 dotnet run
 ```
+
+As migrations pendentes são aplicadas automaticamente na inicialização (`MigrationsConfig.ApplyMigrationsAsync`), então basta o PostgreSQL estar acessível.
 
 O perfil de execução padrão (`Properties/launchSettings.json`) sobe a aplicação em `http://localhost:8080` com `ASPNETCORE_ENVIRONMENT=Development`. Não há redirecionamento HTTPS habilitado (`UseHttpsRedirection()` está comentado em `Program.cs`).
 
@@ -74,26 +74,15 @@ Com a aplicação em ambiente de desenvolvimento, a documentação interativa fi
 
 ## Rodando via Docker
 
-O repositório traz um `Dockerfile` multi-stage (`Api.Instartups.Auth/Dockerfile`) e um `compose.yaml` na raiz:
-
-```yaml
-services:
-  api.instartups.auth:
-    image: api.instartups.auth
-    build:
-      context: .
-      dockerfile: Api.Instartups.Auth/Dockerfile
-```
+Os arquivos ficam em `infra/` (`Dockerfile`, `Dockerfile.dockerignore`, `docker-compose.yml`, `.env.example`). O compose sobe só a API, em `Production`, na porta `8080`; o banco é externo.
 
 ```bash
-docker compose build
-docker compose up
+cd infra
+cp .env.example .env   # preencha banco, chaves JWT, cursor e admin
+docker compose up -d --build
 ```
 
-Pontos de atenção:
-- O `compose.yaml` **não** define um serviço de PostgreSQL — o banco precisa estar disponível separadamente, e a string de conexão (que por padrão aponta para `Host=localhost`) precisa ser sobrescrita para o host/porta corretos ao rodar em container (ex.: via variável de ambiente `ConnectionStrings__PostgresConnection`).
-- O Dockerfile expõe as portas `8080` e `8081` (imagem base `mcr.microsoft.com/dotnet/aspnet:10.0`); build usa `mcr.microsoft.com/dotnet/sdk:10.0`.
-- Mais detalhes em [`deploy.md`](./deploy.md).
+No container, toda a configuração vem do `infra/.env` (variáveis `Secao__Chave`) e as chaves RSA são montadas como volume somente leitura. Variáveis, detalhes da imagem e como usar o Postgres da própria máquina estão em [`deploy.md`](./deploy.md).
 
 ## Migrations do EF Core
 

@@ -5,8 +5,7 @@
 
 Esta é a documentação técnica do serviço **`Api.Instartups.Auth`**, uma API ASP.NET Core responsável por cadastro de usuários, login, emissão e renovação de tokens JWT, controle de sessões (refresh tokens) e um sistema simples de permissões baseado em roles do ASP.NET Core Identity.
 
-Toda a documentação aqui presente foi escrita a partir da leitura direta do código-fonte em `Api.Instartups.Auth/`. Onde o comportamento observado tem alguma limitação, inconsistência ou pendência, isso é declarado explicitamente em [`limitacoes-conhecidas.md`](./limitacoes-conhecidas.md) em vez de omitido.
-
+Toda a documentação aqui presente foi escrita a partir da leitura direta do código-fonte em `Api.Instartups.Auth/`. Onde o comportamento observado tem alguma limitação, inconsistência ou pendência.
 ## Sumário
 
 | Documento | Conteúdo |
@@ -17,8 +16,8 @@ Toda a documentação aqui presente foi escrita a partir da leitura direta do c�
 | [`modelo-de-dados.md`](./modelo-de-dados.md) | Schema do banco PostgreSQL, entidades e mapeamentos EF Core |
 | [`referencia-api.md`](./referencia-api.md) | Referência completa de endpoints (rota, autenticação, request/response) |
 | [`tratamento-de-erros.md`](./tratamento-de-erros.md) | Formato padrão de resposta e de erro, mapeamento de exceções para status HTTP |
-| [`deploy.md`](./deploy.md) | Dockerfile, `compose.yaml`, portas e estado da esteira de CI/CD |
-| [`limitacoes-conhecidas.md`](./limitacoes-conhecidas.md) | Pontos de atenção e débitos técnicos observados no código atual |
+| [`deploy.md`](./deploy.md) | Docker (`infra/`): imagem, `docker-compose.yml`, variáveis do `.env` e checklist de ambiente |
+| [`ci-cd.md`](./ci-cd.md) | Pipeline do GitHub Actions, tags da imagem no GHCR e como publicar/puxar a imagem |
 
 ## Visão geral rápida
 
@@ -26,7 +25,7 @@ Toda a documentação aqui presente foi escrita a partir da leitura direta do c�
 - **Porta padrão (dev):** `http://localhost:8080` (ver [`configuracao-e-execucao.md`](./configuracao-e-execucao.md)).
 - **Banco de dados:** PostgreSQL, schema dedicado `auth`.
 - **Recursos expostos:** cadastro/login/logout de usuários, refresh de sessão, administração de usuários (listagem, edição, bloqueio) e um catálogo fixo de permissões/roles.
-- **Estado do projeto:** não há testes automatizados nem pipeline de CI configurado neste snapshot do código — ver [`limitacoes-conhecidas.md`](./limitacoes-conhecidas.md).
+- **Estado do projeto:** não há testes automatizados; o pipeline de CI/CD faz build e publica a imagem em `ghcr.io/braynerdev/api-instartups-auth` (ver [`ci-cd.md`](./ci-cd.md)).
 
 ## Onde ficam as coisas
 

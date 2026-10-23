@@ -1,3 +1,31 @@
 <Solution>
-  <Project Path="Api.Instartups.Auth/Api.Instartups.Auth.csproj" />
+  <Folder Name="/.github/">
+    <File Path=".github\workflows\ci-cd.yml" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="docs\arquitetura.md" />
+    <File Path="docs\autenticacao-e-autorizacao.md" />
+    <File Path="docs\ci-cd.md" />
+    <File Path="docs\configuracao-e-execucao.md" />
+    <File Path="docs\deploy.md" />
+    <File Path="docs\limitacoes-conhecidas.md" />
+    <File Path="docs\modelo-de-dados.md" />
+    <File Path="docs\README.md" />
+    <File Path="docs\referencia-api.md" />
+    <File Path="docs\tratamento-de-erros.md" />
+  </Folder>
+  <Folder Name="/infra/">
+    <File Path="infra\.env.example" />
+    <File Path="infra\docker-compose.yml" />
+    <File Path="infra\Dockerfile" />
+    <File Path="infra\Dockerfile.dockerignore" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="global.json" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="Api.Instartups.Auth/Api.Instartups.Auth.csproj" />
+  </Folder>
 </Solution>

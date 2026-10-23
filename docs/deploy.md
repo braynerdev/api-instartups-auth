@@ -1,75 +1,63 @@
 # Deploy
 
-## Dockerfile
+Arquivos em `infra/`: `Dockerfile`, `Dockerfile.dockerignore`, `docker-compose.yml`, `.env.example`. O compose sobe **só a API**; o banco é externo e configurado pelo `infra/.env`. O contexto do build é a raiz do repositório (`context: ..`), e o BuildKit aplica o `Dockerfile.dockerignore` por estar ao lado do `Dockerfile`.
 
-`Api.Instartups.Auth/Dockerfile` é um build multi-stage:
+A imagem é publicada no GHCR pelo GitHub Actions — ver [`ci-cd.md`](./ci-cd.md).
 
-```dockerfile
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["Api.Instartups.Auth/Api.Instartups.Auth.csproj", "Api.Instartups.Auth/"]
-RUN dotnet restore "Api.Instartups.Auth/Api.Instartups.Auth.csproj"
-COPY . .
-WORKDIR "/src/Api.Instartups.Auth"
-RUN dotnet build "./Api.Instartups.Auth.csproj" -c $BUILD_CONFIGURATION -o /app/build
-
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Api.Instartups.Auth.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Api.Instartups.Auth.dll"]
-```
-
-- Imagem de runtime: `mcr.microsoft.com/dotnet/aspnet:10.0`; imagem de build: `mcr.microsoft.com/dotnet/sdk:10.0`.
-- Roda como `$APP_UID` (usuário não-root, padrão das imagens oficiais do .NET).
-- Expõe as portas **8080** e **8081**.
-- `BUILD_CONFIGURATION` é configurável via build-arg, com padrão `Release`.
-
-## `compose.yaml`
-
-Na raiz do repositório (`api-instartups-auth/compose.yaml`):
-
-```yaml
-services:
-  api.instartups.auth:
-    image: api.instartups.auth
-    build:
-      context: .
-      dockerfile: Api.Instartups.Auth/Dockerfile
-```
-
-Comandos:
+## Subindo com Docker
 
 ```bash
-docker compose build
-docker compose up
+cd infra
+cp .env.example .env   # preencha banco, chaves JWT, cursor e admin
+docker compose up -d --build
+docker compose logs -f api-auth
 ```
 
-**Importante:** este arquivo define **apenas o serviço da API** — não há um serviço de PostgreSQL declarado no compose. Isso significa que:
-- O banco precisa estar disponível separadamente (outro container, serviço gerenciado, ou instância local).
-- A string de conexão padrão em `appsettings.json` aponta para `Host=localhost`, o que **não funciona** de dentro de um container apontando para um Postgres rodando fora dele — é necessário sobrescrever `ConnectionStrings__PostgresConnection` (ou equivalente) com o host/porta corretos ao subir via Docker.
+A partir da raiz, use `docker compose -f infra/docker-compose.yml ...`.
 
-## CI/CD
+A API fica em `http://localhost:${API_PORT}` (padrão `8080`, a mesma porta que o frontend espera em `AUTH_API_URL`) e roda em `Production`. Na inicialização ela aplica as migrations e roda o seed de roles/admin (ver [`configuracao-e-execucao.md`](./configuracao-e-execucao.md#seed-de-dados-na-inicialização)). Para conferir: `GET /api/healthcheck`.
 
-O repositório possui a pasta `.github/workflows/`, mas ela está **vazia** — não há nenhum pipeline de CI/CD (build, teste, lint, publish de imagem) configurado atualmente. Ver [`limitacoes-conhecidas.md`](./limitacoes-conhecidas.md).
+| Variável | Uso |
+| --- | --- |
+| `IMAGE_TAG` | Tag da imagem do GHCR (`latest`, `develop`, `1.2.3`, `sha-xxxxxxx`...). |
+| `ASPNETCORE_ENVIRONMENT` | Ambiente (padrão `Production`; o Swagger só existe em `Development`). |
+| `API_PORT` | Porta publicada no host. |
+| `TZ` | Fuso horário do container. |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Montam `ConnectionStrings:PostgresConnection`. |
+| `DB_MIN_POOL_SIZE`, `DB_MAX_POOL_SIZE` | Tamanho do pool do Npgsql. |
+| `JWT_PRIVATE_KEY_FILE` | Caminho no host da chave privada, montada como somente leitura em `/run/keys/jwt-private.pem` (`Jwt:PrivateKeyPath`). |
+| `JWT_PUBLIC_KEY_FILE` | Caminho no host da chave pública, montada em `/run/keys/jwt-public.pem` (`Jwt:PublicKeyPath`). É a mesma usada pela Command e pela Query. |
+| `JWT_ISSUER`, `JWT_AUDIENCE` | `Jwt:Issuer` / `Jwt:Audience`. O issuer precisa ser igual ao configurado na Command e na Query. |
+| `JWT_EXPIRATION_MINUTES` | `Jwt:ExpirationMinutes` (padrão `60`). |
+| `REFRESH_TOKEN_EXPIRATION_DAYS` | `RefreshToken:ExpirationDays` (padrão `30`). |
+| `CURSOR_SECRET_KEY` | `Cursor:SecretKey`, chave AES-256 em base64. Gere com `openssl rand -base64 32`. |
+| `ADMIN_EMAIL`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` | `AdminUser:*`. Se algum ficar vazio, o admin não é criado. |
+| `API_CPUS`, `API_MEMORY` | Limites de recursos do container. |
 
-## Checklist mínimo para subir em um novo ambiente
+Se `JWT_PRIVATE_KEY_FILE`/`JWT_PUBLIC_KEY_FILE` ficarem vazios, o compose usa `../../keys/jwt-*.pem` (a pasta `backend/keys/` ao lado dos repositórios).
 
-1. Ter um PostgreSQL acessível e configurar `ConnectionStrings:PostgresConnection` apontando para ele.
-2. Gerar (ou reutilizar) um par de chaves RSA para o JWT e configurar `Jwt:PrivateKeyPath`/`Jwt:PublicKeyPath` — nunca reaproveitar as chaves de exemplo versionadas no repositório em produção.
-3. Definir uma chave AES própria em `Cursor:SecretKey` (base64) — a de `appsettings.Development.json` é só para desenvolvimento.
-4. Decidir se um usuário admin deve ser semeado automaticamente, preenchendo `AdminUser:Email`/`UserName`/`Password` com credenciais próprias do ambiente (ou deixando em branco para pular o seed).
-5. Rodar `dotnet ef database update` (ou aplicar a migration por outro meio) antes do primeiro start, para garantir que o schema `auth` e suas tabelas existam.
-6. Construir e rodar a imagem Docker (`docker compose build && docker compose up`) ou publicar via `dotnet publish` diretamente.
+## Detalhes da imagem
 
-Nenhum desses passos é automatizado hoje (não há script de setup, `Makefile` ou pipeline) — é um processo manual baseado nos arquivos de configuração descritos em [`configuracao-e-execucao.md`](./configuracao-e-execucao.md).
+- Build multi-stage com o restore em camada separada e cache do NuGet (BuildKit), então mudanças só no código não refazem o restore.
+- Runtime `aspnet:10.0-noble-chiseled-extra`: sem shell nem gerenciador de pacotes, usuário não-root, com ICU e tzdata. Por não ter shell, não há `HEALTHCHECK`.
+- O `Dockerfile.dockerignore` deixa de fora `appsettings.Development.json`, `launchSettings.json`, `.env` e `*.pem`: nenhum segredo entra na imagem; tudo vem por variável de ambiente e volume.
+- O Wolverine roda em `TypeLoadMode.Static` fora de `Development` e exige o código pré-gerado em `Api.Instartups.Auth/Internal/Generated/`. Sempre que um handler mudar, regenere com `dotnet run --project Api.Instartups.Auth -- codegen write`; sem isso o container falha na inicialização.
+- No compose, o container roda com filesystem somente leitura (`/tmp` em tmpfs), sem capabilities e com `no-new-privileges`. As chaves de Data Protection ficam em memória, o que não afeta a API (autenticação é por JWT e refresh token no banco).
+- A connection string usa `Gss Encryption Mode=Disable`: a imagem chiseled não tem `libgssapi_krb5`, e sem isso o Npgsql loga erro ao tentar GSS.
+- O projeto compose se chama `instartups`, o mesmo da Command e da Query.
+
+## Banco na própria máquina
+
+Use `DB_HOST=host.docker.internal` (mapeado para o gateway do Docker no compose). O Postgres precisa aceitar conexões vindas da rede do Docker:
+
+- `postgresql.conf`: `listen_addresses` incluindo a interface do bridge, por exemplo `'localhost,172.17.0.1'` ou `'*'`.
+- `pg_hba.conf`: liberar a sub-rede do Docker, por exemplo `host all all 172.16.0.0/12 scram-sha-256`.
+- Reinicie o Postgres depois de alterar.
+
+## Checklist para um novo ambiente
+
+1. PostgreSQL acessível; preencher `DB_*` no `infra/.env`.
+2. Par de chaves RSA próprio do ambiente (`openssl genrsa -out jwt-private.pem 2048` e `openssl rsa -in jwt-private.pem -pubout -out jwt-public.pem`), apontado em `JWT_PRIVATE_KEY_FILE`/`JWT_PUBLIC_KEY_FILE`. A pública vai também para a Command e a Query.
+3. `CURSOR_SECRET_KEY` nova (`openssl rand -base64 32`).
+4. Credenciais do admin em `ADMIN_*`, ou vazias para não semear.
+5. `docker compose pull && docker compose up -d` (imagem do GHCR) ou `docker compose up -d --build` (build local). Migrations e seed rodam sozinhos no start.
