@@ -1,18 +1,37 @@
 using Serilog;
+using Serilog.Events;
 
 namespace Api.Instartups.Auth.Configurations;
 
 public static class SerilogConfig
 {
-    public static void AddSerilogConfig(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder AddSerilogConfig(this WebApplicationBuilder builder)
     {
-        Log.Logger = new LoggerConfiguration()
+        builder.Services.AddSerilog((services, lc) => lc
             .ReadFrom.Configuration(builder.Configuration)
-            .Enrich.FromLogContext()
-            .WriteTo.Console()
-            .WriteTo.Debug()
-            .CreateLogger();
-        builder.Host.UseSerilog();
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext());
 
+        return builder;
+    }
+
+    public static WebApplication UseSerilogConfig(this WebApplication app)
+    {
+        app.UseSerilogRequestLogging(options =>
+        {
+            options.EnrichDiagnosticContext = (diag, http) =>
+            {
+                diag.Set("HostRequisicao", http.Request.Host.Value);
+                diag.Set("CaminhoRequisicao", http.Request.Path);
+                diag.Set("Metodo", http.Request.Method);
+            };
+
+            options.GetLevel = (http, elapsedMs, ex) =>
+                ex is not null || http.Response.StatusCode >= 500 ? LogEventLevel.Error
+                : elapsedMs > 1000 ? LogEventLevel.Warning
+                : LogEventLevel.Information;
+        });
+
+        return app;
     }
 }

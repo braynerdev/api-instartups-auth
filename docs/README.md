@@ -23,6 +23,7 @@ Toda a documentação aqui presente foi escrita a partir da leitura direta do c�
 
 - **Stack:** ASP.NET Core Web API (.NET 10), Entity Framework Core 10 + Npgsql (PostgreSQL), ASP.NET Core Identity, JWT Bearer assinado com RSA (RS256), [WolverineFx](https://wolverinefx.net/) como mediator CQRS, FluentValidation, Mapster, Serilog e Swashbuckle (Swagger).
 - **Porta padrão (dev):** `http://localhost:8080` (ver [`configuracao-e-execucao.md`](./configuracao-e-execucao.md)).
+- **Produção:** atrás do Traefik, em `https://api.instartups.tech/api/...`, sem porta publicada no host (ver [`deploy.md`](./deploy.md)).
 - **Banco de dados:** PostgreSQL, schema dedicado `auth`.
 - **Recursos expostos:** cadastro/login/logout de usuários, refresh de sessão, administração de usuários (listagem, edição, bloqueio) e um catálogo fixo de permissões/roles.
 - **Estado do projeto:** não há testes automatizados; o pipeline de CI/CD faz build e publica a imagem em `ghcr.io/braynerdev/api-instartups-auth` (ver [`ci-cd.md`](./ci-cd.md)).

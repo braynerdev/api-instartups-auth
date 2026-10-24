@@ -4,9 +4,9 @@
 
 - .NET SDK 10 (o `.csproj` alvo é `net10.0`).
 - PostgreSQL acessível (localmente ou via container).
-- Um par de chaves RSA para assinatura do JWT (já existe um em `Api.Instartups.Auth/Keys/`, ver seção [Chaves JWT](#chaves-jwt-rsa)).
+- Um par de chaves RSA para assinatura do JWT (localmente em `INSTARTUPS/keys/`, ver seção [Chaves JWT](#chaves-jwt-rsa)).
 
-Localmente, toda a configuração é feita através de `appsettings.json` / `appsettings.Development.json` (providers padrão de configuração do ASP.NET Core), podendo ser sobrescrita por variáveis de ambiente ou `dotnet user-secrets` seguindo a convenção `Secao__Chave`. No Docker, as variáveis vêm de `infra/.env` (modelo em `infra/.env.example`, ver [`deploy.md`](./deploy.md)).
+Localmente, toda a configuração é feita através de `appsettings.json` / `appsettings.Development.json` (providers padrão de configuração do ASP.NET Core), podendo ser sobrescrita por variáveis de ambiente ou `dotnet user-secrets` seguindo a convenção `Secao__Chave`. No Docker, só o que muda por ambiente ou é segredo vem de `infra/.env` (modelo em `infra/.env.example`, ver [`deploy.md`](./deploy.md)).
 
 ## Chaves de configuração
 
@@ -14,26 +14,30 @@ Todas as chaves lidas pela aplicação, com origem em `appsettings.json` (produ�
 
 | Chave | `appsettings.json` (base) | `appsettings.Development.json` | Uso |
 |---|---|---|---|
-| `ConnectionStrings:PostgresConnection` | placeholder `Host=EXEMPLO;...;Password=EXEMPLO` | string de conexão local | String de conexão do PostgreSQL |
-| `AppDoc:NomeApi` | `API de Autenticação InStartups` | igual | Título usado no Swagger |
-| `AppDoc:DescricaoApi` | `API responsável pelo gerenciamento de autenticação e acesso aos serviços do sistema InStartups.` | igual | Descrição usada no Swagger |
-| `Jwt:Issuer` | vazio (`""`) | `minha-api` | Emissor (`iss`) validado no token |
-| `Jwt:PrivateKeyPath` | `Keys/jwt-private.pem` | igual | Caminho da chave privada RSA usada para assinar o access token |
-| `Jwt:PublicKeyPath` | `Keys/jwt-public.pem` | igual | Caminho da chave pública RSA usada para validar o token recebido |
-| `Jwt:ExpirationMinutes` | `60` | igual | Tempo de vida do access token, em minutos |
-| `RefreshToken:ExpirationDays` | `30` | igual | Tempo de vida da sessão/refresh token, em dias |
+| `ConnectionStrings:PostgresConnection` | vazio (`""`) | string de conexão local | String de conexão do PostgreSQL |
+| `AppDoc:NomeApi` | `API de Autenticação InStartups` | — | Título usado no Swagger |
+| `AppDoc:DescricaoApi` | `API responsável pelo gerenciamento de autenticação e acesso aos serviços do sistema InStartups.` | — | Descrição usada no Swagger |
+| `Jwt:Issuer` / `Jwt:Audience` | vazios (`""`) | `minha-api` / `meu-app` | Emissor (`iss`) e público (`aud`) do token; iguais na Command e na Query |
+| `Jwt:PrivateKeyPath` | `/run/keys/jwt-private.pem` | caminho local da chave | Caminho da chave privada RSA usada para assinar o access token |
+| `Jwt:PublicKeyPath` | `/run/keys/jwt-public.pem` | caminho local da chave | Caminho da chave pública RSA usada para validar o token recebido |
+| `Jwt:ExpirationMinutes` | `60` | `10000` | Tempo de vida do access token, em minutos |
+| `RefreshToken:ExpirationDays` | `30` | — | Tempo de vida da sessão/refresh token, em dias |
 | `Cursor:SecretKey` | vazio (`""`) | chave base64 de exemplo preenchida | Chave AES-256 (base64) usada para criptografar/decriptar cursores de paginação |
 | `AdminUser:Email` / `UserName` / `Password` | todos vazios | `admin@instartups.dev` / `admin` / `Admin@123` | Credenciais do usuário admin semeado na inicialização (ver [Seed de dados](#seed-de-dados-na-inicialização)) |
-| `Serilog:MinimumLevel:Default` | `Fatal` | igual | Nível mínimo de log padrão |
-| `Serilog:MinimumLevel:Override:Wolverine` | `Fatal` | igual | Nível de log específico para o namespace do Wolverine |
-| `Serilog:MinimumLevel:Override:Api.Instartups.Auth.Middleware` | `Warning` | igual | Nível de log específico para o middleware de exceções |
+| `Serilog:MinimumLevel` | `Information`; `Microsoft` e `Wolverine` em `Warning`; `Microsoft.Hosting.Lifetime` em `Information`; `Api.Instartups.Auth.Middleware` em `Warning` | — | Níveis de log (iguais nas 3 APIs) |
+| `Serilog:WriteTo` | `Console` sem tema | `Console` com tema ANSI + `Debug` | Sinks de log |
+| `Serilog:Properties:Application` | `Instartups.Auth` | — | Propriedade adicionada a todo log |
 | `AllowedHosts` | `*` | — | Padrão do ASP.NET Core |
 
-> **Atenção:** o `appsettings.json` versionado não traz credenciais (connection string com placeholders, JWT, cursor e admin vazios). Os valores reais ficam no `appsettings.Development.json`, que é ignorado pelo git e serve só para desenvolvimento local; qualquer implantação real precisa fornecer segredos próprios (variáveis de ambiente, Key Vault, `dotnet user-secrets` etc.).
+"—" significa que o `appsettings.Development.json` não sobrescreve e vale o valor base.
+
+> **Atenção:** o `appsettings.json` versionado não traz credenciais (connection string, issuer/audience, cursor e admin vazios). No container esses valores vêm do `infra/.env` (ver [`deploy.md`](./deploy.md)). Os valores locais ficam no `appsettings.Development.json`, que é ignorado pelo git.
+
+O log usa o mesmo padrão da Command e da Query (`SerilogConfig.cs`): configuração lida da seção `Serilog`, enriquecida com `LogContext`, e um log por requisição (`UseSerilogRequestLogging`) com `HostRequisicao`, `CaminhoRequisicao` e `Metodo`. O nível é `Error` para exceção ou status ≥ 500, `Warning` acima de 1000 ms e `Information` nos demais casos.
 
 ## Chaves JWT (RSA)
 
-O token de acesso é assinado com **RS256** (RSA + SHA-256), não com um segredo simétrico. Os arquivos `Keys/jwt-private.pem` e `Keys/jwt-public.pem` (relativos à raiz do projeto `Api.Instartups.Auth/`) são lidos em tempo de execução:
+O token de acesso é assinado com **RS256** (RSA + SHA-256), não com um segredo simétrico. Os arquivos apontados por `Jwt:PrivateKeyPath` e `Jwt:PublicKeyPath` (no container, `/run/keys/jwt-private.pem` e `/run/keys/jwt-public.pem`; localmente, a pasta `INSTARTUPS/keys/`) são lidos em tempo de execução:
 - `GenerateJwtService` lê `Jwt:PrivateKeyPath` para assinar cada novo token (a chave é lida do disco a cada emissão, não é cacheada).
 - `AuthenticationConf` lê `Jwt:PublicKeyPath` uma vez, na inicialização, para configurar a validação dos tokens recebidos.
 
@@ -74,15 +78,9 @@ Com a aplicação em ambiente de desenvolvimento, a documentação interativa fi
 
 ## Rodando via Docker
 
-Os arquivos ficam em `infra/` (`Dockerfile`, `Dockerfile.dockerignore`, `docker-compose.yml`, `.env.example`). O compose sobe só a API, em `Production`, na porta `8080`; o banco é externo.
+Os arquivos ficam em `infra/` (`Dockerfile`, `Dockerfile.dockerignore`, `docker-compose.yml`, `.env.example`). O compose é uma stack do Docker Swarm que sobe só a API, em `Production`, puxando a imagem do GHCR. Ele não publica porta: a API é exposta pelo Traefik em `https://api.instartups.tech`. O banco é gerenciado/externo.
 
-```bash
-cd infra
-cp .env.example .env   # preencha banco, chaves JWT, cursor e admin
-docker compose up -d --build
-```
-
-No container, toda a configuração vem do `infra/.env` (variáveis `Secao__Chave`) e as chaves RSA são montadas como volume somente leitura. Variáveis, detalhes da imagem e como usar o Postgres da própria máquina estão em [`deploy.md`](./deploy.md).
+No container, o que muda por ambiente vem do `infra/.env` (mapeado no compose para `Secao__Chave`), o resto vem do `appsettings.json`, e as chaves RSA são montadas como volume somente leitura em `/run/keys/`. Variáveis, Traefik, formato Swarm, detalhes da imagem e banco externo estão em [`deploy.md`](./deploy.md).
 
 ## Migrations do EF Core
 
