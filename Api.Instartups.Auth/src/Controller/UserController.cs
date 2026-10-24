@@ -12,6 +12,7 @@ using Api.Instartups.Auth.UseCases.User.GetUserByIdQuery;
 using Api.Instartups.Auth.UseCases.User.ListUsersQuery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Wolverine;
 
 namespace Api.Instartups.Auth.src.Controller;
@@ -23,6 +24,7 @@ public class UserController(
     ) : ControllerBase
 {
     [HttpPost]
+    [EnableRateLimiting(RateLimitConst.Anonymous)]
     public async Task<ActionResult<BaseResponseDTO<RegisterUserCommandResponse>>> RegisterUser(
         CancellationToken ct,
         [FromBody] RegisterUserCommand command

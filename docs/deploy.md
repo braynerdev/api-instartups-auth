@@ -1,6 +1,6 @@
 # Deploy
 
-Arquivos em `infra/`: `Dockerfile`, `Dockerfile.dockerignore`, `docker-compose.yml`, `.env.example`. O `docker-compose.yml` é uma **stack do Docker Swarm**: o Portainer aplica com `docker stack deploy`, puxando a imagem do GHCR (não há build). O banco é gerenciado/externo, e a API é exposta pelo **Traefik** em `https://api.instartups.tech`.
+Arquivos em `infra/`: `Dockerfile`, `Dockerfile.dockerignore`, `docker-compose.yml`, `.env.example`. O `docker-compose.yml` é uma **stack do Docker Swarm**: o Portainer aplica com `docker stack deploy`, puxando a imagem do GHCR (não há build). O banco é gerenciado/externo, e a API é exposta pelo **Traefik** em `https://auth.instartups.tech`.
 
 O passo a passo do servidor (DNS na Hostinger, rede `proxy`, Traefik, certificados, Portainer) está em **`INSTARTUPS/infra/README.md`**, fora deste repositório. A imagem é publicada no GHCR pelo GitHub Actions; ver [`ci-cd.md`](./ci-cd.md).
 
@@ -8,7 +8,7 @@ O passo a passo do servidor (DNS na Hostinger, rede `proxy`, Traefik, certificad
 
 | Onde | O quê |
 | --- | --- |
-| `appsettings.json` (dentro da imagem) | Log (níveis, sink, `Application`), caminhos das chaves no container (`/run/keys/*.pem`), `Jwt:ExpirationMinutes` (60), `RefreshToken:ExpirationDays` (30), `AppDoc`, `AllowedHosts` |
+| `appsettings.json` (dentro da imagem) | Log (níveis, sink, `Application`), caminhos das chaves no container (`/run/keys/*.pem`), `Jwt:ExpirationMinutes` (60), `RefreshToken:ExpirationDays` (30), `AllowedHosts` |
 | `docker-compose.yml` | Mapeia as variáveis do `.env` para as chaves do .NET (`Secao__Chave`) e fixa o que é de infraestrutura: TZ, pool do banco, limites, hardening, política de update e labels do Traefik |
 | `.env` / variáveis da stack no Portainer | Só o que muda por ambiente ou é segredo |
 
@@ -16,40 +16,41 @@ O `.env` **não entra no container sozinho**: ele só preenche os `${VAR}` do co
 
 ## Subindo no servidor (Portainer)
 
-Pré-requisitos (ver o guia da infra): rede `proxy` criada, Traefik no ar, DNS de `api.instartups.tech` apontando para o servidor e registry `ghcr.io` cadastrado no Portainer.
+Pré-requisitos (ver o guia da infra): rede `proxy` criada, Traefik no ar, DNS de `auth.instartups.tech` apontando para o servidor e registry `ghcr.io` cadastrado no Portainer.
 
 1. **Chaves RSA** em `/opt/instartups/keys/`. O container roda como o usuário `app` (uid 1654): `chmod 644 jwt-public.pem` e, na privada, `chown 1654 jwt-private.pem && chmod 400 jwt-private.pem`.
 2. **Stack** `instartups-auth` no Portainer, com o `infra/docker-compose.yml` (pelo repositório ou pelo web editor) e as variáveis do `.env.example` preenchidas.
 3. **Atualizar** para uma imagem nova: *Update the stack* com **Re-pull image and redeploy**. O `update_config: start-first` sobe o container novo antes de derrubar o antigo; se o novo falhar, o Swarm volta para o anterior.
 
-Na inicialização a API aplica as migrations e roda o seed de roles/admin (ver [`configuracao-e-execucao.md`](./configuracao-e-execucao.md#seed-de-dados-na-inicialização)). Para conferir: `GET https://api.instartups.tech/api/healthcheck`.
+Na inicialização a API aplica as migrations e roda o seed de roles/admin (ver [`configuracao-e-execucao.md`](./configuracao-e-execucao.md#seed-de-dados-na-inicialização)). Para conferir: `GET https://auth.instartups.tech/api/healthcheck`.
 
 ## Variáveis (`infra/.env`)
 
 | Variável | Uso |
 | --- | --- |
 | `IMAGE_TAG` | Tag da imagem do GHCR (`latest`, `develop`, `1.2.3`, `sha-xxxxxxx`...). |
-| `ASPNETCORE_ENVIRONMENT` | Ambiente (padrão `Production`; o Swagger só existe em `Development`). |
-| `API_DOMAIN` | Subdomínio das APIs (`api.instartups.tech`), o mesmo nas 3. |
+| `ASPNETCORE_ENVIRONMENT` | Ambiente (padrão `Production`; o Scalar em `/docs` só existe em `Development`). |
+| `API_DOMAIN` | Subdomínio desta API (`auth.instartups.tech`); o Traefik roteia pelo host. |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Montam `ConnectionStrings:PostgresConnection` (pool fixo em 0–50 no compose). |
 | `DB_SSL_MODE` | `SSL Mode` do Npgsql (padrão `Prefer`; use `Require` se o provedor exigir). |
 | `JWT_PRIVATE_KEY_FILE` | Caminho **absoluto** no host da chave privada, montada como somente leitura em `/run/keys/jwt-private.pem`. |
 | `JWT_PUBLIC_KEY_FILE` | Caminho **absoluto** no host da chave pública, montada em `/run/keys/jwt-public.pem`. É a mesma usada pela Command e pela Query. |
 | `JWT_ISSUER`, `JWT_AUDIENCE` | `Jwt:Issuer` / `Jwt:Audience`. Precisam ser iguais aos da Command e da Query. |
 | `CURSOR_SECRET_KEY` | `Cursor:SecretKey`, chave AES-256 em base64. Gere com `openssl rand -base64 32`. |
+| `CORS_ORIGIN` | `CorsPadrao:0`, origem do frontend liberada no CORS (ex.: `https://instartups.tech`). Obrigatória, como na Command e na Query. |
 | `ADMIN_EMAIL`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` | `AdminUser:*`. Se algum ficar vazio, o admin não é criado. |
 
 ## Traefik e rotas
 
-As 3 APIs ficam em `api.instartups.tech`, separadas pelo caminho, sem StripPrefix, porque as rotas já têm prefixo próprio:
+Cada API tem o próprio subdomínio, e o router do Traefik casa só pelo host (`Host(${API_DOMAIN})`), sem `PathPrefix` nem StripPrefix. As rotas mantêm o prefixo próprio:
 
-| API | Caminhos |
-| --- | --- |
-| Auth | `/api/auth`, `/api/user`, `/api/permission`, `/api/healthcheck` |
-| Command | `/api/instartups/command` |
-| Query | `/api/instartups/query` |
+| API | Host | Caminhos |
+| --- | --- | --- |
+| Auth | `auth.instartups.tech` | `/api/auth`, `/api/user`, `/api/permission`, `/api/healthcheck` |
+| Command | `command.instartups.tech` | `/api/instartups/command` |
+| Query | `query.instartups.tech` | `/api/instartups/query` |
 
-Se a Auth ganhar um controller novo, acrescente o prefixo na label `traefik.http.routers.instartups-auth.rule` do compose.
+Controllers novos na Auth não exigem mudança no compose: tudo o que chega em `auth.instartups.tech` vai para ela.
 
 O serviço não publica porta: só o Traefik o alcança, pela rede `proxy`. `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` faz a API respeitar o `X-Forwarded-Proto/For` do Traefik, o que dá esquema `https` e o IP real do cliente nos logs.
 

@@ -24,8 +24,6 @@ namespace Internal.Generated.WolverineHandlers
             _failureActionOfListUsersQuery = failureActionOfListUsersQuery;
         }
 
-
-
         public override async System.Threading.Tasks.Task HandleAsync(Wolverine.Runtime.MessageContext context, System.Threading.CancellationToken cancellation)
         {
             await using var serviceScope = _serviceScopeFactory.CreateAsyncScope();
@@ -46,13 +44,10 @@ namespace Internal.Generated.WolverineHandlers
             
             // Outgoing, cascaded message
             await context.EnqueueCascadingAsync(outgoing1).ConfigureAwait(false);
-
         }
-
     }
 
     // END: ListUsersQueryHandler792589936
     
     
 }
-

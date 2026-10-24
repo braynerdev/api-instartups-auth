@@ -15,12 +15,13 @@ public class GenerateJwtService(
     ) : IGenerateJwtService
 {
     private readonly JwtOptions _options = options.Value;
+    private readonly SigningCredentials _signingCredentials = CreateSigningCredentials(options.Value.PrivateKeyPath);
+
     public async Task<string> GenerateJwtAsync(ApplicationUser user, IEnumerable<string> roles)
     {
         var claims = GenerateClaims(user, roles);
-        var signingCredentials = CreateSigningCredentials(_options.PrivateKeyPath);
 
-        return CreateToken(user, claims, signingCredentials);
+        return CreateToken(user, claims, _signingCredentials);
     }
     
     private IEnumerable<Claim> GenerateClaims(ApplicationUser user, IEnumerable<string> roles)
@@ -43,7 +44,7 @@ public class GenerateJwtService(
         return claims;
     }
 
-    private SigningCredentials CreateSigningCredentials(string privateKeyPath)
+    private static SigningCredentials CreateSigningCredentials(string privateKeyPath)
     {
         var rsa = RSA.Create();
         rsa.ImportFromPem(File.ReadAllText(privateKeyPath));

@@ -7,23 +7,76 @@ namespace Internal.Generated.WolverineHandlers
     [global::System.CodeDom.Compiler.GeneratedCode("JasperFx", "1.0.0")]
     public sealed class GeneratedHandlerRegistry : Wolverine.Runtime.Handlers.HandlerRegistry
     {
-
-
         public override System.Type[] HandlerTypes()
         {
             return new System.Type[] { typeof(Api.Instartups.Auth.UseCases.Auth.LoginCommand.LoginCommandHandler), typeof(Api.Instartups.Auth.UseCases.Auth.RefreshTokenCommand.RefreshTokenCommandHandler), typeof(Api.Instartups.Auth.UseCases.Auth.RevokeAllTokensCommand.RevokeAllTokensCommandHandler), typeof(Api.Instartups.Auth.UseCases.Auth.RevokeTokenCommand.RevokeTokenCommandHandler), typeof(Api.Instartups.Auth.UseCases.Permission.ListPermissionsQuery.ListPermissionsQueryHandler), typeof(Api.Instartups.Auth.UseCases.User.GetMeQuery.GetMeQueryHandler), typeof(Api.Instartups.Auth.UseCases.User.GetUserByIdQuery.GetUserByIdQueryHandler), typeof(Api.Instartups.Auth.UseCases.User.ListUsersQuery.ListUsersQueryHandler), typeof(Api.Instartups.Auth.src.UseCases.User.AddUserPermissionCommand.AddUserPermissionCommandHandler), typeof(Api.Instartups.Auth.src.UseCases.User.AdminUpdateUserCommand.AdminUpdateUserCommandHandler), typeof(Api.Instartups.Auth.src.UseCases.User.ChangePasswordCommand.ChangePasswordCommandHandler), typeof(Api.Instartups.Auth.src.UseCases.User.RegisterUserCommand.RegisterUserCommandHandler), typeof(Api.Instartups.Auth.src.UseCases.User.RemoveUserPermissionCommand.RemoveUserPermissionCommandHandler), typeof(Api.Instartups.Auth.src.UseCases.User.UpdateMeCommand.UpdateMeCommandHandler) };
         }
 
-
         public override System.Type[] MessageTypes()
         {
             return System.Array.Empty<System.Type>();
         }
-
     }
 
     // END: GeneratedHandlerRegistry
     
     
-}
+    // START: AotRoots
+    // Native AOT rooting companion (jasperfx#743). Generated code is only ever reached reflectively, so without these roots ILC trims it and TypeLoadMode.Static finds nothing.
+    [global::System.CodeDom.Compiler.GeneratedCode("JasperFx", "1.0.0")]
+    public sealed class AotRoots
+    {
+        [global::System.Runtime.CompilerServices.ModuleInitializer]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.GeneratedHandlerRegistry))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.AddUserPermissionCommandHandler184117672))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.AdminUpdateUserCommandHandler1172964912))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.ChangePasswordCommandHandler1272116964))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.GetMeQueryHandler990771228))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.GetUserByIdQueryHandler2035277226))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.ListPermissionsQueryHandler301843020))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.ListUsersQueryHandler792589936))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.LoginCommandHandler437710673))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RefreshTokenCommandHandler1417888771))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RegisterUserCommandHandler1929491556))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RemoveUserPermissionCommandHandler592237020))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RevokeAllTokensCommandHandler1491421373))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RevokeTokenCommandHandler1456853297))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UpdateMeCommandHandler1744491940))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.Auth.LoginCommand.LoginCommandHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.Auth.RefreshTokenCommand.RefreshTokenCommandHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.Auth.RevokeAllTokensCommand.RevokeAllTokensCommandHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.Auth.RevokeTokenCommand.RevokeTokenCommandHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.Permission.ListPermissionsQuery.ListPermissionsQueryHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.User.GetMeQuery.GetMeQueryHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.User.GetUserByIdQuery.GetUserByIdQueryHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.User.ListUsersQuery.ListUsersQueryHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.src.UseCases.User.AddUserPermissionCommand.AddUserPermissionCommandHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.src.UseCases.User.AdminUpdateUserCommand.AdminUpdateUserCommandHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.src.UseCases.User.ChangePasswordCommand.ChangePasswordCommandHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.src.UseCases.User.RegisterUserCommand.RegisterUserCommandHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.src.UseCases.User.RemoveUserPermissionCommand.RemoveUserPermissionCommandHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.src.UseCases.User.UpdateMeCommand.UpdateMeCommandHandler))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.Auth.LoginCommand.LoginCommand))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.Auth.RefreshTokenCommand.RefreshTokenCommand))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.Auth.RevokeAllTokensCommand.RevokeAllTokensCommand))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.Auth.RevokeTokenCommand.RevokeTokenCommand))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.Permission.ListPermissionsQuery.ListPermissionsQuery))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.User.GetMeQuery.GetMeQuery))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.User.GetUserByIdQuery.GetUserByIdQuery))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.UseCases.User.ListUsersQuery.ListUsersQuery))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.src.UseCases.User.AddUserPermissionCommand.AddUserPermissionCommand))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.src.UseCases.User.AdminUpdateUserCommand.AdminUpdateUserCommand))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.src.UseCases.User.ChangePasswordCommand.ChangePasswordCommand))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.src.UseCases.User.RegisterUserCommand.RegisterUserCommand))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.src.UseCases.User.RemoveUserPermissionCommand.RemoveUserPermissionCommand))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Api.Instartups.Auth.src.UseCases.User.UpdateMeCommand.UpdateMeCommand))]
+        public static void Pin()
+        {
+            // Intentionally empty. The [DynamicDependency] attributes above are the payload: they root the generated types for Native AOT, and [ModuleInitializer] guarantees this method is itself an ILC root.
+        }
+    }
 
+    // END: AotRoots
+    
+    
+}

@@ -1,6 +1,7 @@
 using Api.Instartups.Auth.DTOs;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -14,6 +15,7 @@ public static class AuthenticationConf
         var pubKeyPath = configuration["Jwt:PublicKeyPath"] ?? throw new ArgumentException("Caminho da chave pública inválido!");
         var pubKey = File.ReadAllText(pubKeyPath, Encoding.UTF8) ?? throw new ArgumentException("Chave pública inválida!");
         var issuer = configuration["Jwt:Issuer"] ?? throw new ArgumentException("Emissor inválido!");
+        var audience = configuration["Jwt:Audience"] ?? throw new ArgumentException("Público-alvo inválido!");
 
         var rsa = RSA.Create();
         rsa.ImportFromPem(pubKey);
@@ -27,16 +29,20 @@ public static class AuthenticationConf
         {
             options.SaveToken = false;
             options.RequireHttpsMetadata = false;
+            options.MapInboundClaims = false;
 
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
                 ValidIssuer = issuer,
-                ValidateAudience = false,
+                ValidateAudience = true,
+                ValidAudience = audience,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
                 ClockSkew = TimeSpan.Zero,
-                IssuerSigningKey = new RsaSecurityKey(rsa)
+                IssuerSigningKey = new RsaSecurityKey(rsa),
+                NameClaimType = JwtRegisteredClaimNames.Sub,
+                RoleClaimType = "roles",
             };
 
             options.Events = new JwtBearerEvents
@@ -53,7 +59,7 @@ public static class AuthenticationConf
                     context.Response.ContentType = "application/json";
 
                     var result = JsonSerializer.Serialize(
-                        BaseResponseDTO<string>.Error("Você não possui permissão para acessar este recurso."));
+                        BaseResponseDTO<string>.Error(null, "Você não possui permissão para acessar este recurso."), JsonSerializerOptions.Web);
 
                     await context.Response.WriteAsync(result);
                 },
@@ -70,7 +76,7 @@ public static class AuthenticationConf
 
                     var message = GetMessageError(context);
                     var result = JsonSerializer.Serialize(
-                        BaseResponseDTO<string>.Error(message));
+                        BaseResponseDTO<string>.Error(null, message), JsonSerializerOptions.Web);
 
                     await context.Response.WriteAsync(result);
                 }

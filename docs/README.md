@@ -1,7 +1,7 @@
 # API de Autenticação InStartups
 
-> Descrição oficial da API (definida em `appsettings.json`, chave `AppDoc:DescricaoApi`):
-> "API responsável pelo gerenciamento de autenticação e acesso aos serviços do sistema InStartups."
+> Descrição oficial da API (definida em `src/Configurations/OpenApiConfig.cs`):
+> "API responsável pelo gerenciamento de autenticação e acesso aos serviços da Instartups, plataforma que conecta startups do Porto Digital a mentores e investidores anjo do Nordeste."
 
 Esta é a documentação técnica do serviço **`Api.Instartups.Auth`**, uma API ASP.NET Core responsável por cadastro de usuários, login, emissão e renovação de tokens JWT, controle de sessões (refresh tokens) e um sistema simples de permissões baseado em roles do ASP.NET Core Identity.
 
@@ -21,9 +21,9 @@ Toda a documentação aqui presente foi escrita a partir da leitura direta do c�
 
 ## Visão geral rápida
 
-- **Stack:** ASP.NET Core Web API (.NET 10), Entity Framework Core 10 + Npgsql (PostgreSQL), ASP.NET Core Identity, JWT Bearer assinado com RSA (RS256), [WolverineFx](https://wolverinefx.net/) como mediator CQRS, FluentValidation, Mapster, Serilog e Swashbuckle (Swagger).
+- **Stack:** ASP.NET Core Web API (.NET 10), Entity Framework Core 10 + Npgsql (PostgreSQL), ASP.NET Core Identity, JWT Bearer assinado com RSA (RS256), [WolverineFx](https://wolverinefx.net/) como mediator CQRS, FluentValidation, Mapster, Serilog e Scalar (documentação OpenAPI).
 - **Porta padrão (dev):** `http://localhost:8080` (ver [`configuracao-e-execucao.md`](./configuracao-e-execucao.md)).
-- **Produção:** atrás do Traefik, em `https://api.instartups.tech/api/...`, sem porta publicada no host (ver [`deploy.md`](./deploy.md)).
+- **Produção:** atrás do Traefik, em `https://auth.instartups.tech/api/...`, sem porta publicada no host (ver [`deploy.md`](./deploy.md)).
 - **Banco de dados:** PostgreSQL, schema dedicado `auth`.
 - **Recursos expostos:** cadastro/login/logout de usuários, refresh de sessão, administração de usuários (listagem, edição, bloqueio) e um catálogo fixo de permissões/roles.
 - **Estado do projeto:** não há testes automatizados; o pipeline de CI/CD faz build e publica a imagem em `ghcr.io/braynerdev/api-instartups-auth` (ver [`ci-cd.md`](./ci-cd.md)).
@@ -42,7 +42,7 @@ Api.Instartups.Auth/
     ├── Controller/             # controllers HTTP (finos, delegam para UseCases via Wolverine)
     ├── UseCases/                # commands/queries + handlers + validações (regra de negócio)
     ├── Models/                  # entidades (ApplicationUser, UserSessionsModel)
-    ├── Configurations/          # wiring de DI, autenticação, banco, swagger etc.
+    ├── Configurations/          # wiring de DI, autenticação, banco, CORS, rate limit, OpenAPI etc.
     ├── Services/, Repositories/ # serviços de infraestrutura (JWT, refresh token, sessões)
     ├── Exceptions/, Middleware/ # exceções de domínio e tratamento global de erros
     └── DTOs/, Constants/        # contratos de resposta e constantes (permissões, mensagens)

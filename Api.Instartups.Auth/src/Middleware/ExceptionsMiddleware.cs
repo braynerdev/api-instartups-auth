@@ -1,7 +1,6 @@
 using Api.Instartups.Auth.DTOs;
 using Api.Instartups.Auth.Exceptions;
 using Api.Instartups.Auth.Exceptions.Base;
-using FastExpressionCompiler;
 
 namespace Api.Instartups.Auth.Middleware;
 
@@ -86,15 +85,21 @@ public class ExceptionsMiddleware
             BadRequestException bad =>
                 BaseResponseDTO<string>.Error(null, bad.Message),
 
+            ForbiddenException forbidden =>
+                BaseResponseDTO<string>.Error(null, forbidden.Message),
+
             NotFoundException notFound =>
                 BaseResponseDTO<string>.Error(null, notFound.Message),
 
+            ConflictException conflict =>
+                BaseResponseDTO<string>.Error(null, conflict.Message),
+
             OperationCanceledException =>
                 BaseResponseDTO<string>.Error(
-                    "Requisição cancelada pelo cliente"),
+                    null, "Requisição cancelada pelo cliente"),
 
             _ => BaseResponseDTO<string>.Error(
-                    "Erro inesperado")
+                    null, "Erro inesperado")
         };
     }
 

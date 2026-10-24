@@ -47,13 +47,13 @@ Convenções gerais válidas para todos os endpoints abaixo:
   "data": { "accessToken": "string", "refreshToken": "string" }
 }
 ```
-- **Erros possíveis:** `400` credenciais inválidas ou limite de sessões ativas atingido; `403` usuário bloqueado.
+- **Erros possíveis:** `400` credenciais inválidas ou limite de sessões ativas atingido; `403` usuário bloqueado; `429` limite de requisições (policy `Anonymous`).
 
 ### `POST /api/auth/refresh`
 - **Autenticação:** nenhuma — o refresh token no corpo é a credencial; funciona mesmo com o access token expirado.
 - **Corpo (`RefreshTokenCommand`):** `{ "refreshToken": "string" }` (obrigatório).
 - **Resposta 200:** `BaseResponseDTO<RefreshTokenCommandResponse>` com `{ accessToken, refreshToken }` — **novo** par, a sessão anterior é revogada e substituída.
-- **Erros possíveis:** `401` refresh token inválido/inexistente; `403` usuário bloqueado.
+- **Erros possíveis:** `401` refresh token inválido/inexistente, ou já rotacionado (reuso: nesse caso **todas** as sessões do usuário são revogadas); `403` usuário bloqueado; `429` limite de requisições (policy `Anonymous`).
 
 ### `POST /api/auth/logout`
 - **Autenticação:** `[Authorize]`.
@@ -70,7 +70,7 @@ Convenções gerais válidas para todos os endpoints abaixo:
 ## User (`/api/user`)
 
 ### `POST /api/user` — cadastro público
-- **Autenticação:** nenhuma (endpoint de cadastro).
+- **Autenticação:** nenhuma (endpoint de cadastro). Sujeito à policy de rate limit `Anonymous` (`429` ao exceder).
 - **Corpo (`RegisterUserCommand`):**
 
 ```json

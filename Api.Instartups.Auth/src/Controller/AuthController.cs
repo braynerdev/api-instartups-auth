@@ -1,4 +1,5 @@
 using Api.Instartups.Auth.Configurations.Extension;
+using Api.Instartups.Auth.Constants;
 using Api.Instartups.Auth.DTOs;
 using Api.Instartups.Auth.UseCases.Auth.LoginCommand;
 using Api.Instartups.Auth.UseCases.Auth.RefreshTokenCommand;
@@ -6,6 +7,7 @@ using Api.Instartups.Auth.UseCases.Auth.RevokeAllTokensCommand;
 using Api.Instartups.Auth.UseCases.Auth.RevokeTokenCommand;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Wolverine;
 
 namespace Api.Instartups.Auth.src.Controller;
@@ -17,6 +19,7 @@ public class AuthController(
     ) : ControllerBase
 {
     [HttpPost("login")]
+    [EnableRateLimiting(RateLimitConst.Anonymous)]
     public async Task<ActionResult<BaseResponseDTO<LoginCommandResponse>>> Login(
         CancellationToken ct,
         [FromBody] LoginCommand command
@@ -27,6 +30,7 @@ public class AuthController(
     }
 
     [HttpPost("refresh")]
+    [EnableRateLimiting(RateLimitConst.Anonymous)]
     public async Task<ActionResult<BaseResponseDTO<RefreshTokenCommandResponse>>> Refresh(
         CancellationToken ct,
         [FromBody] RefreshTokenCommand command

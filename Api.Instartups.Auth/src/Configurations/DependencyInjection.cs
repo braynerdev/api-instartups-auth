@@ -28,7 +28,7 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(CursorOptions.SectionName))
             .ValidateOnStart();
 
-        services.AddScoped<IGenerateJwtService, GenerateJwtService>();
+        services.AddSingleton<IGenerateJwtService, GenerateJwtService>();
         services.AddScoped<IGenerateRefreshTokenService, GenerateRefreshTokenService>();
         services.AddScoped<IUserSessionRepository, UserSessionRepository>();
         services.AddSingleton<ICursorEncoder, CursorEncoder>();

@@ -22,7 +22,7 @@ Toda resposta da API (sucesso ou erro), sem exceções, segue o formato definido
 
 ## Middleware global (`ExceptionsMiddleware`)
 
-Registrado como o primeiro middleware do pipeline (`app.UseExceptionsMiddleware()`), envolve toda a requisição em um `try/catch` e mapeia o tipo da exceção para um status HTTP:
+Registrado logo depois do CORS e do log de requisição (`app.UseExceptionsMiddleware()`), envolve o resto da requisição em um `try/catch` e mapeia o tipo da exceção para um status HTTP:
 
 | Tipo de exceção | Status HTTP |
 |---|---|
@@ -55,7 +55,7 @@ Registrado como o primeiro middleware do pipeline (`app.UseExceptionsMiddleware(
   - `PasswordTooShort`, `PasswordRequiresDigit`, `PasswordRequiresUpper`, `PasswordRequiresLower`, `PasswordRequiresNonAlphanumeric`, `PasswordRequiresUniqueChars` → `"password"`
   - Qualquer outro código → `""` (campo vazio)
 
-- **`UnauthorizedException` / `BadRequestException` / `NotFoundException`** — `data: null`, `message` é a mensagem própria da exceção (em português, específica do cenário — ver tabela abaixo).
+- **`UnauthorizedException` / `BadRequestException` / `ForbiddenException` / `NotFoundException` / `ConflictException`** — `data: null`, `message` é a mensagem própria da exceção (em português, específica do cenário — ver tabela abaixo).
 
 - **`OperationCanceledException`** — `data: null`, mensagem fixa "Requisição cancelada pelo cliente" (cliente fechou a conexão antes da resposta).
 
@@ -81,6 +81,26 @@ Registrado como o primeiro middleware do pipeline (`app.UseExceptionsMiddleware(
 
 - Exceções que resultam em `500` são logadas com `LogError` (stack trace completo incluído).
 - Todas as demais exceções tratadas (400/401/403/404/409/499) são logadas com `LogWarning("Erro de negócio: {mensagem}")` — nível de log configurado explicitamente para `Warning` no namespace `Api.Instartups.Auth.Middleware` via `Serilog:MinimumLevel:Override`, já que o nível padrão da aplicação é `Fatal`.
+
+## JSON malformado (400, fora do middleware)
+
+Corpo que não pode ser desserializado (JSON inválido ou tipo errado em um campo) é barrado pelo model binding do MVC, antes do handler. `ControllersConfig` troca a resposta padrão (ProblemDetails) pelo envelope da API, com um item por campo problemático:
+
+```json
+{
+  "isSuccess": false,
+  "message": "Formato da requisição inválido.",
+  "data": [
+    { "field": "$.userNameOrEmail", "code": "Format", "message": ["Formato da requisição inválido."] }
+  ]
+}
+```
+
+Campo obrigatório ausente **não** cai aqui: o `[Required]` implícito está desligado, então o corpo é aceito e o FluentValidation responde com "Erro de validação." e o código `NotEmptyOrNull`.
+
+## Limite de requisições (429, fora do middleware)
+
+Rejeições do rate limit (`RateLimiterConfig`) respondem `429` com `data: null` e a mensagem "Limite de requisições atingido. Tente novamente em instantes.". Limites e partições em [`autenticacao-e-autorizacao.md`](./autenticacao-e-autorizacao.md#rate-limit).
 
 ## Erros 401/403 na camada de autenticação (fora do middleware)
 

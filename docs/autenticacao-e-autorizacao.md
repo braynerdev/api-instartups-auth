@@ -10,13 +10,13 @@ Implementado em `LoginCommandHandler`:
 
 1. Resolve o usuário por `UserNameOrEmail`: se contém `@`, busca por e-mail (`FindByEmailAsync`); caso contrário, por nome de usuário (`FindByNameAsync`). Se não encontrado, lança `InvalidCredentialsException` (400 — mesma mensagem genérica usada para senha incorreta, para não revelar se o usuário existe).
 2. Se o usuário estiver bloqueado (`IsLockedOutAsync`), lança `ForbiddenException` (403) com a mensagem "Usuário bloqueado. Entre em contato com o administrador.".
-3. Verifica a senha (`CheckPasswordAsync`). Se incorreta, chama `AccessFailedAsync` (incrementa o contador de tentativas falhas do Identity, que pode levar ao bloqueio) e lança `InvalidCredentialsException` (400).
+3. Verifica a senha (`CheckPasswordAsync`). Se incorreta, chama `AccessFailedAsync` (incrementa o contador de tentativas falhas do Identity, que pode levar ao bloqueio) e lança `InvalidCredentialsException` (400). Se correta, zera o contador (`ResetAccessFailedCountAsync`), então o bloqueio só acontece com 5 falhas **seguidas**.
 4. Carrega as sessões ativas do usuário, gera um novo access token (JWT) e um novo refresh token, e persiste uma nova sessão (`ApplicationUser.AddSession`) — ver [Sessões e refresh token](#sessões-e-refresh-token) abaixo para o limite de 3 sessões simultâneas.
 5. Retorna `{ AccessToken, RefreshToken }`.
 
 ## Formato do access token (JWT)
 
-Gerado por `GenerateJwtService`, assinado com a chave privada RSA (`Jwt:PrivateKeyPath`) usando o algoritmo `RS256`.
+Gerado por `GenerateJwtService`, assinado com a chave privada RSA (`Jwt:PrivateKeyPath`) usando o algoritmo `RS256`. O serviço é singleton e lê a chave do disco uma única vez, na primeira emissão.
 
 Claims incluídas em todo token emitido:
 
@@ -27,14 +27,17 @@ Claims incluídas em todo token emitido:
 | `unique_name` | Nome de usuário (`UserName`) |
 | `email` | E-mail do usuário |
 | `PhoneNumber` (claim customizada) | Telefone do usuário, ou string vazia se não houver |
-| `role` (`ClaimTypes.Role`, um por role) | Uma claim de role para cada permissão/role atribuída ao usuário |
+| `roles` (uma por role) | Uma claim para cada permissão/role atribuída ao usuário |
 
 Parâmetros de emissão:
 - `issuer`: `Jwt:Issuer` (`minha-api` no ambiente configurado)
+- `audience`: `Jwt:Audience` (`meu-app` no ambiente configurado)
 - `notBefore`: agora (UTC)
 - `expires`: agora + `Jwt:ExpirationMinutes` (60 minutos por padrão)
 
-Validação do token recebido (`AuthenticationConf`): `ValidateIssuer = true` (contra `Jwt:Issuer`), **`ValidateAudience = false`**, `ValidateLifetime = true`, `ClockSkew = TimeSpan.Zero`, assinatura validada contra a chave pública RSA. O campo `Jwt:Audience` existe na configuração mas não é usado nem para emitir nem para validar o token — é uma configuração sem efeito hoje.
+Validação do token recebido (`AuthenticationConf`), igual à da Command e da Query: `ValidateIssuer = true` (contra `Jwt:Issuer`), `ValidateAudience = true` (contra `Jwt:Audience`), `ValidateLifetime = true`, `ClockSkew = TimeSpan.Zero`, assinatura validada contra a chave pública RSA.
+
+O mapeamento automático de claims do ASP.NET Core está desligado (`MapInboundClaims = false`): as claims chegam com o mesmo nome com que foram emitidas. Por isso `RoleClaimType = "roles"` e `NameClaimType = "sub"` são configurados explicitamente, e `RequireRole` (nas policies) lê a claim `roles`.
 
 ### Respostas de autenticação/autorização customizadas
 
@@ -43,7 +46,7 @@ Validação do token recebido (`AuthenticationConf`): `ValidateIssuer = true` (c
 - **401 (`OnChallenge`)** — token ausente, inválido ou expirado. Mensagem `"O token de acesso expirou."` se a falha for especificamente de expiração (`SecurityTokenExpiredException`), ou `"É necessário estar autenticado para acessar este recurso."` nos demais casos.
 - **403 (`OnForbidden`)** — usuário autenticado mas sem a role/policy exigida. Mensagem `"Você não possui permissão para acessar este recurso."`.
 
-Esses dois casos são tratados na camada de autenticação, **antes** de chegar ao `ExceptionsMiddleware` (ver [`tratamento-de-erros.md`](./tratamento-de-erros.md)).
+O corpo é serializado com `JsonSerializerOptions.Web` (camelCase), igual às respostas dos controllers. Esses dois casos são tratados na camada de autenticação, **antes** de chegar ao `ExceptionsMiddleware` (ver [`tratamento-de-erros.md`](./tratamento-de-erros.md)).
 
 ## Sessões e refresh token
 
@@ -62,9 +65,10 @@ O refresh token em si (`GenerateRefreshTokenService.GenerateRefreshToken()`) é 
 
 `RefreshTokenCommandHandler`:
 1. Busca a sessão pelo hash do refresh token enviado. Se não existir, lança `InvalidRefreshTokenException` (401, "Refresh token inválido.").
-2. Se o usuário dono da sessão estiver bloqueado, lança `ForbiddenException` (403).
-3. Rotaciona a sessão (`ApplicationUser.RotateSession`): a sessão antiga é revogada e marcada com `ReplacedByTokenId` apontando para a nova; a nova sessão é criada com o **mesmo `ExpiresAt`** da sessão original (a renovação não estende a janela total da sessão, apenas troca o token).
-4. Emite um novo access token e retorna `{ AccessToken, RefreshToken }` (novo par).
+2. **Detecção de reuso:** se a sessão já foi rotacionada (`ReplacedByTokenId` preenchido), alguém está reapresentando um token antigo, o que indica possível roubo. Todas as sessões ativas do usuário são revogadas e a resposta é `InvalidRefreshTokenException` (401). Tanto o token antigo quanto o atual deixam de funcionar, e o usuário precisa logar de novo. O BFF do front evita falso positivo com o refresh single-flight (uma renovação por token, resultado reaproveitado por 30 s).
+3. Se o usuário dono da sessão estiver bloqueado, lança `ForbiddenException` (403).
+4. Rotaciona a sessão (`ApplicationUser.RotateSession`): a sessão antiga é revogada e marcada com `ReplacedByTokenId` apontando para a nova; a nova sessão é criada com o **mesmo `ExpiresAt`** da sessão original (a renovação não estende a janela total da sessão, apenas troca o token).
+5. Emite um novo access token e retorna `{ AccessToken, RefreshToken }` (novo par).
 
 > Este endpoint não exige access token: a credencial é o próprio refresh token enviado no corpo. Assim o cliente consegue renovar a sessão mesmo depois que o access token expirou (dentro da janela de validade do refresh token).
 
@@ -96,7 +100,7 @@ Há **duas camadas** de regras de senha no projeto, com comportamentos diferente
 Outras configurações do Identity (`IdentityConf.cs`):
 - Lockout: até 5 tentativas de login falhas (`MaxFailedAccessAttempts = 5`), bloqueio temporário de 5 minutos (`DefaultLockoutTimeSpan`), habilitado para novos usuários.
 - E-mail único obrigatório (`RequireUniqueEmail = true`).
-- `PasswordHasherOptions.IterationCount = 1000` — abaixo dos valores tipicamente recomendados para PBKDF2/Identity (ver [`limitacoes-conhecidas.md`](./limitacoes-conhecidas.md)).
+- Hash de senha com o padrão do Identity (PBKDF2-SHA512, 100.000 iterações). Hashes antigos, gerados com 1.000 iterações, continuam válidos e são refeitos com o valor atual no próximo login bem-sucedido (`SuccessRehashNeeded`).
 
 ## Permissões e autorização
 
@@ -119,3 +123,12 @@ Um administrador pode conceder ou remover qualquer uma das permissões do catál
 Em ambos os casos, `permissionName` é validado contra a lista `PermissionConst.All` — um nome fora da lista é rejeitado na validação (código de erro `Format`, mensagem "Permissão inválida.") antes mesmo de chegar ao handler.
 
 Novos usuários registrados via `POST /api/user` **não recebem nenhuma role/permissão automaticamente** — um admin precisa concedê-las manualmente após o cadastro.
+
+## Rate limit
+
+Configurado em `RateLimiterConfig`, no mesmo modelo da Command e da Query. Requisição rejeitada → `429` com `BaseResponseDTO<string>` e a mensagem "Limite de requisições atingido. Tente novamente em instantes.".
+
+- **Limite global** (todas as rotas): token bucket de 30 requisições a cada 10 s, fila de 5, particionado pelo `sub` do token. Requisições sem token caem na partição única `anonymous`.
+- **Policy `Anonymous`** (`[EnableRateLimiting(RateLimitConst.Anonymous)]` em `POST /api/auth/login`, `POST /api/auth/refresh` e `POST /api/user`): janela fixa de 60 requisições por minuto, fila de 10, somada ao limite global.
+
+> **Atenção:** o front chama a API pelo BFF (servidor Next), que não repassa o IP do cliente. Por isso todos os logins, cadastros e refreshes de todos os usuários dividem a mesma partição `anonymous`. Os limites são folgados de propósito. A proteção contra força bruta em uma conta específica fica com o lockout do Identity (5 falhas seguidas → 5 minutos de bloqueio). Se o tráfego crescer, os números em `RateLimiterConfig` precisam ser revistos.

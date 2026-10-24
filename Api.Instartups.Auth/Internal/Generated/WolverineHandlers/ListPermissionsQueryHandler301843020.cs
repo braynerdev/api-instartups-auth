@@ -21,8 +21,6 @@ namespace Internal.Generated.WolverineHandlers
             _failureActionOfListPermissionsQuery = failureActionOfListPermissionsQuery;
         }
 
-
-
         public override async System.Threading.Tasks.Task HandleAsync(Wolverine.Runtime.MessageContext context, System.Threading.CancellationToken cancellation)
         {
             // The actual message body
@@ -39,13 +37,10 @@ namespace Internal.Generated.WolverineHandlers
             
             // Outgoing, cascaded message
             await context.EnqueueCascadingAsync(outgoing1).ConfigureAwait(false);
-
         }
-
     }
 
     // END: ListPermissionsQueryHandler301843020
     
     
 }
-

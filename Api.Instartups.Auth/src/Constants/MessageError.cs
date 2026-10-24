@@ -16,4 +16,10 @@ public class MessageError
 
     public static string Format()
         => "Formato inválido.";
+
+    public static string InvalidRequestFormat()
+        => "Formato da requisição inválido.";
+
+    public static string RateLimit()
+        => "Limite de requisições atingido. Tente novamente em instantes.";
 }

@@ -9,6 +9,7 @@ Dependências declaradas em `Api.Instartups.Auth.csproj`:
 | Pacote | Versão | Papel |
 |---|---|---|
 | `Microsoft.AspNetCore.OpenApi` | 10.0.11 | Geração nativa de documento OpenAPI (`/openapi/v1.json` em desenvolvimento) |
+| `Scalar.AspNetCore` | 2.18.3 | Documentação interativa em `/docs` (em desenvolvimento), igual à Command e à Query |
 | `Microsoft.AspNetCore.Authentication.JwtBearer` | 10.0.11 | Autenticação via JWT Bearer |
 | `Microsoft.AspNetCore.Identity.EntityFrameworkCore` | 10.0.11 | ASP.NET Core Identity (usuários, roles) persistido via EF Core |
 | `Microsoft.EntityFrameworkCore` / `.Design` | 10.0.11 | ORM e ferramentas de migration |
@@ -19,7 +20,6 @@ Dependências declaradas em `Api.Instartups.Auth.csproj`:
 | `WolverineFx.RuntimeCompilation` | 6.33.0 | Compilação em tempo de execução usada pelo Wolverine |
 | `Mapster.DependencyInjection` | 10.0.12 | Mapeamento de objetos (entidade → DTO de resposta) |
 | `Serilog.AspNetCore` | 10.0.0 | Logging estruturado |
-| `Swashbuckle.AspNetCore` | 10.2.3 | Geração de Swagger/OpenAPI e Swagger UI |
 | `Microsoft.VisualStudio.Web.CodeGeneration.Design` | 10.0.2 | Ferramentas de scaffolding (dependência de desenvolvimento) |
 | `NuGet.Protocol` | 7.9.0 | Protocolo NuGet (dependência transitiva de ferramentas) |
 
@@ -55,18 +55,18 @@ Essa convenção se repete para todos os casos de uso em `src/UseCases/Auth/*`, 
 | `UseCases/` | Commands/queries + handlers + validações, organizados por módulo (`Auth`, `User`, `Permission`) |
 | `Models/` | `ApplicationUser` (extensão de `IdentityUser`) e `UserSessionsModel` (sessão de refresh token) |
 | `ModelsMaps/` | Configuração Fluent do EF Core para entidades que não são do Identity (`UserSessionsModelMap`) |
-| `Configurations/` | Classes estáticas de bootstrap/DI: autenticação, autorização, banco de dados, Identity, Swagger, Serilog, mapeamento, Wolverine |
+| `Configurations/` | Classes estáticas de bootstrap/DI: autenticação, autorização, CORS, rate limit, banco de dados, Identity, OpenAPI/Scalar, Serilog, mapeamento, Wolverine |
 | `Services/` | `GenerateJwtService`, `GenerateRefreshTokenService` — geração de tokens |
 | `Repositories/` | `UserSessionRepository` — acesso a dados de sessões |
 | `Interfaces/` | Contratos (`ICommand`, `IQuery`, `ICommandHandler`, `IQueryHandler`, `IGenerateJwtService`, `IUserSessionRepository`, `ICursorEncoder`, etc.) |
 | `Middleware/` | `ExceptionsMiddleware` — tratamento global de exceções |
 | `Exceptions/` | Hierarquia de exceções de negócio (`Base/BadRequestException`, `Base/ConflictException`, `Base/NotFoundException` e subclasses específicas) |
 | `DTOs/` | `BaseResponseDTO<T>` (envelope padrão de resposta) e `ValidateErrorDTO` (erro de validação por campo) |
-| `Constants/` | `PermissionConst` (catálogo fixo de permissões/roles), `CodeError`, `MessageError` |
+| `Constants/` | `PermissionConst` (catálogo fixo de permissões/roles), `CorsConst`, `RateLimitConst`, `CodeError`, `MessageError` |
 | `Common/Validation/` | Extensões reutilizáveis de regras FluentValidation (`ValidationEmail`, `ValidationPassword`, `ValidationPhoneNumber`, `ValidationUserName`) |
 | `Common/Pagination/` | `CursorEncoder`, `CursorPage`, `CursorPayload` — paginação por cursor opaco criptografado |
 | `Common/Identity/` | `IdentityResultExtensions.EnsureSucceeded()` — traduz falhas do `IdentityResult` em `IdentityValidationException` |
-| `Extension/` | `ClaimsPrincipalExtensions` (extrai o id do usuário do JWT), `ExceptionsExtension`, `SwaggerExtension`, `AuthenticationMiddlewareExtensions` |
+| `Extension/` | `ClaimsPrincipalExtensions` (extrai o id do usuário do JWT), `ExceptionsExtension`, `AuthenticationMiddlewareExtensions` |
 | `Options/` | Classes de configuração fortemente tipadas (`JwtOptions`, `RefreshTokenOptions`, `CursorOptions`) |
 
 ## Bootstrap da aplicação (`Program.cs`)
@@ -84,33 +84,45 @@ builder.Services
     .AddControllersConfig()
     .AddLowerCaseConfig()
     .AddMappingConfig()
-    .AddOpenApi()
-    .AddSwaggerConfig(builder.Configuration);
+    .AddCorsConfigurations(builder.Configuration)
+    .AddRateLimiterConfig()
+    .AddOpenApiConfig();
 
 builder.AddSerilogConfig();
 
 var app = builder.Build();
 
-await app.Services.SeedIdentityDataAsync(builder.Configuration); // seed de roles + admin
-
-app.UseExceptionsMiddleware();   // 1. captura exceções de toda a pipeline
-app.UseAuthenticationConf();     // 2. autenticação JWT
-app.UseAuthorization();          // 3. autorização (policies)
-
-if (app.Environment.IsDevelopment())
+var executandoComando = args.Length > 0 && !args[0].StartsWith('-');
+if (!executandoComando)          // comandos CLI (ex.: codegen write) não tocam no banco
 {
-    app.MapOpenApi();
-    app.UseSwaggerExtension(builder.Configuration); // Swagger UI em /swagger-ui
+    await app.ApplyMigrationsAsync();
+    await app.Services.SeedIdentityDataAsync(builder.Configuration); // seed de roles + admin
 }
 
-// app.UseHttpsRedirection();    // presente no código, mas comentado (desabilitado)
+app.UseCors(CorsConst.Frontend); // 1. CORS antes de tudo (responde preflight)
+app.UseSerilogConfig();          // 2. log por requisição
+app.UseExceptionsMiddleware();   // 3. captura exceções do resto da pipeline
+
+if (app.Environment.IsDevelopment())
+    app.UseOpenApiConfig();      // OpenAPI + Scalar em /docs
+
+else
+{
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
+
+app.UseAuthenticationConf();     // 4. autenticação JWT
+app.UseRateLimiter();            // 5. rate limit (depois da autenticação, para particionar pelo sub)
+app.UseAuthorization();          // 6. autorização (policies)
 
 app.MapControllers();
-app.Run();
+return await app.RunJasperFxCommands(args);
 ```
 
 Pontos relevantes:
 - `LowerCasesConfig.AddLowerCaseConfig()` força todas as rotas geradas para minúsculas (`RouteOptions.LowercaseUrls = true`), por isso todos os endpoints documentados aqui usam caminhos em minúsculo (ex.: `api/user/me`).
-- `ControllersConfig.AddControllersConfig()` define globalmente `Produces`/`Consumes` como `application/json`, `ReturnHttpNotAcceptable = true` e `AllowEmptyInputInBodyModelBinding = false` (corpo vazio é rejeitado quando o endpoint espera um body).
-- O Swagger UI só é montado em ambiente de desenvolvimento (`app.Environment.IsDevelopment()`).
-- `SeedIdentityDataAsync` roda uma única vez na inicialização, antes do pipeline HTTP ser configurado (ver [`configuracao-e-execucao.md`](./configuracao-e-execucao.md)).
+- `ControllersConfig.AddControllersConfig()` define globalmente `Produces`/`Consumes` como `application/json`, `ReturnHttpNotAcceptable = true` e `AllowEmptyInputInBodyModelBinding = false` (corpo vazio é rejeitado quando o endpoint espera um body). Também documenta 401 e 429 em todos os endpoints, desliga o `[Required]` implícito (`SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true`, a obrigatoriedade fica com o FluentValidation) e troca a resposta de JSON malformado pelo envelope `BaseResponseDTO` (ver [`tratamento-de-erros.md`](./tratamento-de-erros.md)).
+- A pipeline segue a mesma ordem da Command e da Query.
+- O Scalar (`/docs`) e o `/openapi/v1.json` só são montados em ambiente de desenvolvimento (`app.Environment.IsDevelopment()`). Fora dele entram HSTS e redirecionamento HTTPS; atrás do Traefik o `X-Forwarded-Proto` já chega como `https`, então não há redirecionamento de fato.
+- `SeedIdentityDataAsync` roda uma única vez na inicialização, antes do pipeline HTTP ser configurado, e só quando a aplicação sobe como servidor (ver [`configuracao-e-execucao.md`](./configuracao-e-execucao.md)).
