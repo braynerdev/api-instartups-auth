@@ -10,12 +10,10 @@ WORKDIR /src
 # Restore em camada separada: só é refeito quando o .csproj muda
 COPY global.json ./
 COPY Api.Instartups.Auth/Api.Instartups.Auth.csproj Api.Instartups.Auth/
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
-    dotnet restore Api.Instartups.Auth/Api.Instartups.Auth.csproj -a $TARGETARCH
+RUN dotnet restore Api.Instartups.Auth/Api.Instartups.Auth.csproj -a $TARGETARCH
 
 COPY Api.Instartups.Auth/ Api.Instartups.Auth/
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
-    dotnet publish Api.Instartups.Auth/Api.Instartups.Auth.csproj \
+RUN dotnet publish Api.Instartups.Auth/Api.Instartups.Auth.csproj \
         -c Release -a $TARGETARCH --no-restore --self-contained false \
         -o /app \
         -p:UseAppHost=false \

@@ -31,6 +31,8 @@ if (!executandoComando)
 
 await app.Services.SeedIdentityDataAsync(builder.Configuration);
 
+app.UseSerilogConfig();
+
 app.UseExceptionsMiddleware();
 
 app.UseAuthenticationConf();
