@@ -56,7 +56,10 @@ public class LoginCommandHandler(
     private async Task CheckPasswordAsync(ApplicationUser user, string password)
     {
         if (await userManager.CheckPasswordAsync(user, password))
+        {
+            await userManager.ResetAccessFailedCountAsync(user);
             return;
+        }
 
         await userManager.AccessFailedAsync(user);
         throw new InvalidCredentialsException();

@@ -23,6 +23,9 @@ public class RefreshTokenCommandHandler(
         var session = await GetSessionAsync(command.RefreshToken, ct);
         var user = session.User;
 
+        if (session.ReplacedByTokenId is not null)
+            await RevokeAllSessionsAsync(user, ct);
+
         if (await userManager.IsLockedOutAsync(user))
             throw new ForbiddenException("Usuário bloqueado. Entre em contato com o administrador.");
 
@@ -36,6 +39,16 @@ public class RefreshTokenCommandHandler(
         await sessionRepository.AddAsync(newSession, ct);
 
         return new RefreshTokenCommandResponse(accessToken, newRefreshToken);
+    }
+
+    // Token já rotacionado sendo reapresentado: indício de roubo, então derruba todas as sessões.
+    private async Task RevokeAllSessionsAsync(ApplicationUser user, CancellationToken ct)
+    {
+        await sessionRepository.LoadActiveSessionsAsync(user, ct);
+        user.RevokeAllSessions();
+        await sessionRepository.SaveChangesAsync(ct);
+
+        throw new InvalidRefreshTokenException();
     }
 
     private async Task<UserSessionsModel> GetSessionAsync(string refreshToken, CancellationToken ct)

@@ -1,9 +1,8 @@
 using Api.Instartups.Auth.Configurations;
 using Api.Instartups.Auth.Configurations.Database;
 using Api.Instartups.Auth.Configurations.Extension;
+using Api.Instartups.Auth.Constants;
 using JasperFx;
-using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,8 +17,9 @@ builder.Services
     .AddControllersConfig()
     .AddLowerCaseConfig()
     .AddMappingConfig()
-    .AddOpenApi()
-    .AddSwaggerConfig(builder.Configuration);
+    .AddCorsConfigurations(builder.Configuration)
+    .AddRateLimiterConfig()
+    .AddOpenApiConfig();
     
 builder.AddSerilogConfig();
 
@@ -27,25 +27,29 @@ var app = builder.Build();
 
 var executandoComando = args.Length > 0 && !args[0].StartsWith('-');
 if (!executandoComando)
+{
     await app.ApplyMigrationsAsync();
+    await app.Services.SeedIdentityDataAsync(builder.Configuration);
+}
 
-await app.Services.SeedIdentityDataAsync(builder.Configuration);
+app.UseCors(CorsConst.Frontend);
 
 app.UseSerilogConfig();
 
 app.UseExceptionsMiddleware();
 
-app.UseAuthenticationConf();
-
-app.UseAuthorization();
-
 if (app.Environment.IsDevelopment())
+    app.UseOpenApiConfig();
+
+else
 {
-    app.MapOpenApi();
-    app.UseSwaggerExtension(builder.Configuration);
+    app.UseHsts();
+    app.UseHttpsRedirection();
 }
 
-//app.UseHttpsRedirection();
+app.UseAuthenticationConf();
+app.UseRateLimiter();
+app.UseAuthorization();
 
 app.MapControllers();
 

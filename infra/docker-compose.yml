@@ -16,6 +16,7 @@ services:
       AdminUser__Email: ${ADMIN_EMAIL:-}
       AdminUser__UserName: ${ADMIN_USERNAME:-}
       AdminUser__Password: ${ADMIN_PASSWORD:-}
+      CorsPadrao__0: ${CORS_ORIGIN:?defina CORS_ORIGIN no .env}
     volumes:
       - ${JWT_PRIVATE_KEY_FILE:?defina JWT_PRIVATE_KEY_FILE no .env (caminho absoluto no servidor)}:/run/keys/jwt-private.pem:ro
       - ${JWT_PUBLIC_KEY_FILE:?defina JWT_PUBLIC_KEY_FILE no .env (caminho absoluto no servidor)}:/run/keys/jwt-public.pem:ro
@@ -45,7 +46,7 @@ services:
           memory: 512M
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.instartups-auth.rule=Host(`${API_DOMAIN:?defina API_DOMAIN no .env}`) && (PathPrefix(`/api/auth`) || PathPrefix(`/api/user`) || PathPrefix(`/api/permission`) || PathPrefix(`/api/healthcheck`))"
+        - "traefik.http.routers.instartups-auth.rule=Host(`${API_DOMAIN:?defina API_DOMAIN no .env}`)"
         - "traefik.http.routers.instartups-auth.entrypoints=websecure"
         - "traefik.http.routers.instartups-auth.tls.certresolver=letsencrypt"
         - "traefik.http.routers.instartups-auth.service=instartups-auth"

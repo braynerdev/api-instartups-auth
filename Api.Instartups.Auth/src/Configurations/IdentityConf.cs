@@ -22,11 +22,6 @@ public static class IdentityConf
             
             o.User.RequireUniqueEmail = true;
         });
-        
-        services.Configure<PasswordHasherOptions>(options =>
-        {
-            options.IterationCount = 1000;
-        });
         return services;
     }
 }

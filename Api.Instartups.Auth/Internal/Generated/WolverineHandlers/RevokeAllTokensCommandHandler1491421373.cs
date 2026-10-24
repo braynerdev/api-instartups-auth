@@ -21,8 +21,6 @@ namespace Internal.Generated.WolverineHandlers
             _failureActionOfRevokeAllTokensCommand = failureActionOfRevokeAllTokensCommand;
         }
 
-
-
         public override async System.Threading.Tasks.Task HandleAsync(Wolverine.Runtime.MessageContext context, System.Threading.CancellationToken cancellation)
         {
             await using var serviceScope = _serviceScopeFactory.CreateAsyncScope();
@@ -42,13 +40,10 @@ namespace Internal.Generated.WolverineHandlers
             
             // The actual message execution
             await revokeAllTokensCommandHandler.Handle(revokeAllTokensCommand, cancellation).ConfigureAwait(false);
-
         }
-
     }
 
     // END: RevokeAllTokensCommandHandler1491421373
     
     
 }
-

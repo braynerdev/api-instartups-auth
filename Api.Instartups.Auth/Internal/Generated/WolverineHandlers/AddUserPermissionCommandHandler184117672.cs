@@ -21,8 +21,6 @@ namespace Internal.Generated.WolverineHandlers
             _failureActionOfAddUserPermissionCommand = failureActionOfAddUserPermissionCommand;
         }
 
-
-
         public override async System.Threading.Tasks.Task HandleAsync(Wolverine.Runtime.MessageContext context, System.Threading.CancellationToken cancellation)
         {
             await using var serviceScope = _serviceScopeFactory.CreateAsyncScope();
@@ -39,13 +37,10 @@ namespace Internal.Generated.WolverineHandlers
             
             // The actual message execution
             await addUserPermissionCommandHandler.Handle(addUserPermissionCommand, cancellation).ConfigureAwait(false);
-
         }
-
     }
 
     // END: AddUserPermissionCommandHandler184117672
     
     
 }
-
