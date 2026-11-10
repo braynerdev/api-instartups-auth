@@ -43,8 +43,11 @@ public class LoginCommandHandler(
 
     private async Task<ApplicationUser> GetUserAsync(string userNameOrEmail)
     {
+        // Com '@' busca primeiro por e-mail; se não achar, tenta por nome de usuário
+        // (contas antigas foram criadas quando o '@' ainda era aceito no nome de usuário).
         var user = userNameOrEmail.Contains('@')
             ? await userManager.FindByEmailAsync(userNameOrEmail)
+              ?? await userManager.FindByNameAsync(userNameOrEmail)
             : await userManager.FindByNameAsync(userNameOrEmail);
 
         if (user is not null)

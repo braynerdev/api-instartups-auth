@@ -8,7 +8,7 @@ A API usa **JWT Bearer** para autenticação, com tokens de acesso assinados via
 
 Implementado em `LoginCommandHandler`:
 
-1. Resolve o usuário por `UserNameOrEmail`: se contém `@`, busca por e-mail (`FindByEmailAsync`); caso contrário, por nome de usuário (`FindByNameAsync`). Se não encontrado, lança `InvalidCredentialsException` (400 — mesma mensagem genérica usada para senha incorreta, para não revelar se o usuário existe).
+1. Resolve o usuário por `UserNameOrEmail`: se contém `@`, busca por e-mail (`FindByEmailAsync`) e, se não achar, por nome de usuário (contas antigas com `@` no nome); caso contrário, por nome de usuário (`FindByNameAsync`). Novos nomes de usuário não podem conter `@` (validação e `AllowedUserNameCharacters`). Se não encontrado, lança `InvalidCredentialsException` (400 — mesma mensagem genérica usada para senha incorreta, para não revelar se o usuário existe).
 2. Se o usuário estiver bloqueado (`IsLockedOutAsync`), lança `ForbiddenException` (403) com a mensagem "Usuário bloqueado. Entre em contato com o administrador.".
 3. Verifica a senha (`CheckPasswordAsync`). Se incorreta, chama `AccessFailedAsync` (incrementa o contador de tentativas falhas do Identity, que pode levar ao bloqueio) e lança `InvalidCredentialsException` (400). Se correta, zera o contador (`ResetAccessFailedCountAsync`), então o bloqueio só acontece com 5 falhas **seguidas**.
 4. Carrega as sessões ativas do usuário, gera um novo access token (JWT) e um novo refresh token, e persiste uma nova sessão (`ApplicationUser.AddSession`) — ver [Sessões e refresh token](#sessões-e-refresh-token) abaixo para o limite de 3 sessões simultâneas.
@@ -59,7 +59,7 @@ O refresh token em si (`GenerateRefreshTokenService.GenerateRefreshToken()`) é 
 
 ### Limite de sessões ativas
 
-`ApplicationUser.MaxActiveSessions = 3`. Ao fazer login, `AddSession` conta as sessões ativas (`RevokedAt is null && ExpiresAt > now`) e lança `MaxActiveSessionsException` (400, "Limite de sessões ativas atingido.") se o limite já tiver sido atingido — ou seja, um quarto login simultâneo é rejeitado enquanto uma das três sessões anteriores não for revogada.
+`ApplicationUser.MaxActiveSessions = 3`. Ao fazer login, `AddSession` conta as sessões ativas (`RevokedAt is null && ExpiresAt > now`) e, se o limite já tiver sido atingido, revoga a sessão ativa mais antiga (menor `ExpiresAt`) antes de criar a nova. Assim um quarto login é aceito e o dispositivo mais antigo é desconectado. Antes o quarto login era recusado com `MaxActiveSessionsException` (400), o que deixava sem acesso, por até 30 dias, quem fechava o navegador sem sair (defeito DEF-02 do projeto de Verificação e Validação).
 
 ### Renovação (`POST /api/auth/refresh`, anônimo)
 

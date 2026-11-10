@@ -14,6 +14,9 @@ public class MessageError
     public static string MaxLength(int maxLength) 
         => $"O valor não pode exceder {maxLength} caracteres.";
 
+    public static string UserNameWithAt()
+        => "O nome de usuário não pode conter o caractere @.";
+
     public static string Format()
         => "Formato inválido.";
 
