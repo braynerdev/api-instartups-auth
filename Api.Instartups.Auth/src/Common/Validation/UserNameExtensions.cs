@@ -14,6 +14,10 @@ public static class UserNameExtensions
             .WithMessage(MessageError.NotEmptyOrNull())
             .MaximumLength(20)
             .WithErrorCode(CodeError.MaxLength)
-            .WithMessage(MessageError.MaxLength(20));
+            .WithMessage(MessageError.MaxLength(20))
+            // O login trata qualquer valor com '@' como e-mail, então o nome de usuário não pode conter '@'.
+            .Must(userName => userName is null || !userName.Contains('@'))
+            .WithErrorCode(CodeError.Format)
+            .WithMessage(MessageError.UserNameWithAt());
     }
 }

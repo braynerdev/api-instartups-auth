@@ -14,10 +14,16 @@ public class ApplicationUser : IdentityUser
     {
         var now = DateTimeOffset.UtcNow;
         var activeSessions = _userSessionsModel
-            .Count(s => s.RevokedAt is null && s.ExpiresAt > now);
+            .Where(s => s.IsActive(now))
+            .OrderBy(s => s.ExpiresAt)
+            .ToList();
 
-        if (activeSessions >= MaxActiveSessions)
-            throw new MaxActiveSessionsException();
+        // No limite, encerra as sessões mais antigas para abrir espaço para a nova.
+        // Recusar o login deixava o usuário sem acesso por até 30 dias quando ele
+        // fechava o navegador sem sair (o logout exige uma sessão válida).
+        var excedentes = activeSessions.Count - MaxActiveSessions + 1;
+        foreach (var sessaoAntiga in activeSessions.Take(Math.Max(excedentes, 0)))
+            sessaoAntiga.Revoke(now);
 
         var session = Models.UserSessionsModel.Create(tokenHash, expiresAt, Id);
         _userSessionsModel.Add(session);

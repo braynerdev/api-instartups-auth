@@ -21,6 +21,9 @@ public static class IdentityConf
             o.Password.RequiredUniqueChars = 0;
             
             o.User.RequireUniqueEmail = true;
+            // Sem '@': o login usa o '@' para decidir entre e-mail e nome de usuário.
+            o.User.AllowedUserNameCharacters =
+                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._+";
         });
         return services;
     }
